@@ -50,7 +50,7 @@ d3.json("data/processed/report.json").then((R) => {
   const zoneBy = d3.group(zoneRows, (d) => d.season);
   const zget = (s, z) => zoneBy.get(s).find((r) => r.zone === z);
 
-  shootaround(R.shooters[0]);
+  shootaround(R.shooters[0], R.distance);
   tiles(R, L, seasons, zget);
   volume(L);
   timeline(R, L, seasons, zget);
@@ -704,82 +704,166 @@ function volumeShooters(V, leaders) {
 }
 
 /* ================================================================== hero: shootaround */
-function shootaround(record) {
-  const host = document.getElementById("sa-court");
-  const madeEl = document.getElementById("sa-made"), note = document.getElementById("sa-note");
-  const styles = ["standard", "pullup", "stepback"];
-  let made = 0;
+// A playable court: arrow keys (or the on-screen buttons) move the player, Space shoots,
+// D dunks. Behind the 3-point line a make counts 3, inside it 2. The readout shows the
+// real league make rate from that distance (data/processed/report.json -> distance).
+function shootaround(record, distCurve) {
+  const $ = (id) => document.getElementById(id);
+  const host = $("sa-court"), box = $("shootaround");
+  const byFt = new Map(distCurve.map((d) => [d.dist, d]));
+  const tally = { three: 0, two: 0, dunk: 0, pts: 0 };
+  const plural = (n, one, many) => `${fmt.int(n)} ${n === 1 ? one : many}`;
+
+  function where(ft) {
+    const three = ft >= 23.75, f = Math.min(35, Math.floor(ft)), r = byFt.get(f);
+    $("sa-dist").innerHTML = `${ft.toFixed(1)} ft from the rim · <em>${three ? "3-pointer" : "2-pointer"}</em>`;
+    $("sa-odds").textContent = r ? `Your shots always fall. NBA players made ${fmt.pct(r.fg_pct)} from ${f} ft (2003-04 to 2024-25).` : "";
+  }
+
   const scene = Hoops.scene(host, {
-    distFt: 25, jersey: ACCENT, trim: "#1a0d02", kMax: 21, label: "you · 25 ft",
-    onScore() {
-      made++;
-      madeEl.textContent = fmt.int(made);
-      madeEl.classList.remove("bump"); void madeEl.offsetWidth; madeEl.classList.add("bump");
-      const left = record.fg3m - made;
-      note.textContent = left > 0
-        ? `${fmt.int(made * 3)} points. ${record.name} made ${record.fg3m} in ${record.season}: ${fmt.int(left)} to go.`
-        : `${fmt.int(made * 3)} points. You just passed ${record.name}’s ${record.season} record of ${record.fg3m}!`;
+    distFt: 25, kMax: 21,
+    player: { heightIn: 76, build: 1, jersey: ACCENT, trim: "#1a0d02", numColor: "#1a0d02", number: "3" },
+    onMove: where,
+    onScore(points, kind) {
+      tally[kind]++; tally.pts += points;
+      const el = $("sa-pts");
+      el.textContent = fmt.int(tally.pts);
+      el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+      const left = record.fg3m - tally.three;
+      $("sa-split").textContent = `${plural(tally.three, "three", "threes")} · ${plural(tally.two, "two", "twos")} · ${plural(tally.dunk, "dunk", "dunks")}` +
+        (tally.three ? (left > 0 ? ` · ${fmt.int(left)} threes behind ${record.name}’s ${record.season}` : ` · past ${record.name}’s ${record.season} record!`) : "");
     },
   });
   responsive(host, (w) => scene.layout(w));
-  const shoot = () => scene.shoot(styles[Math.floor(Math.random() * styles.length)]);
-  host.addEventListener("click", shoot);
-  host.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); shoot(); } });
-  document.getElementById("sa-shoot").addEventListener("click", shoot);
+  where(scene.distance);
+
+  const shoot = () => {
+    const styles = scene.distance < 10 ? ["standard"] : ["standard", "pullup", "stepback"];
+    scene.shoot(styles[Math.floor(Math.random() * styles.length)]);
+  };
+  host.addEventListener("click", () => { host.focus({ preventScroll: true }); shoot(); });
+  $("sa-shoot").addEventListener("click", shoot);
+  $("sa-dunk").addEventListener("click", () => scene.dunk());
+
+  // press-and-hold movement buttons (mouse, touch, or Enter/Space on the focused button)
+  [["sa-left", -1], ["sa-right", 1]].forEach(([id, d]) => {
+    const b = $(id), stop = () => scene.move(0);
+    b.addEventListener("pointerdown", (e) => { e.preventDefault(); if (b.setPointerCapture) b.setPointerCapture(e.pointerId); scene.move(d); });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach((ev) => b.addEventListener(ev, stop));
+    b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); scene.move(d); } });
+    b.addEventListener("keyup", (e) => { if (e.key === "Enter" || e.key === " ") stop(); });
+  });
+
+  // keyboard: active while the court is on screen, never while typing in a form control
+  let visible = false, heldKey = null;
+  new IntersectionObserver((en) => { visible = en[0].isIntersecting; if (!visible) scene.move(0); }, { threshold: 0.5 }).observe(box);
+  const typing = (t) => t && (t.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName));
+  document.addEventListener("keydown", (e) => {
+    if (!visible || e.altKey || e.ctrlKey || e.metaKey || typing(e.target)) return;
+    const onButton = e.target && /^(BUTTON|A|SUMMARY)$/.test(e.target.tagName);
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault(); heldKey = e.key; scene.move(e.key === "ArrowRight" ? 1 : -1);
+    } else if (e.key === " " || e.key === "ArrowUp") {
+      if (onButton && e.key === " ") return;
+      e.preventDefault(); if (!e.repeat) shoot();
+    } else if (e.key === "d" || e.key === "D" || e.key === "ArrowDown") {
+      e.preventDefault(); if (!e.repeat) scene.dunk();
+    }
+  });
+  document.addEventListener("keyup", (e) => { if (e.key === heldKey) { heldKey = null; scene.move(0); } });
+  window.addEventListener("blur", () => { heldKey = null; scene.move(0); });
 }
 
 /* ================================================================== 9b. pick a shooter */
+// [jersey, trim, number color] — stylized team colors
 const TEAM_COLORS = {
-  "Golden State Warriors": ["#1D428A", "#FFC72C"],
-  "Houston Rockets": ["#CE1141", "#C4CED4"],
-  "Minnesota Timberwolves": ["#236192", "#78BE20"],
-  "Detroit Pistons": ["#C8102E", "#1D42BA"],
-  "Oklahoma City Thunder": ["#007AC1", "#EF3B24"],
-  "Indiana Pacers": ["#002D62", "#FDBB30"],
+  "Golden State Warriors": ["#1D428A", "#FFC72C", "#FFC72C"],
+  "Houston Rockets": ["#CE1141", "#C4CED4", "#FFFFFF"],
+  "Minnesota Timberwolves": ["#236192", "#78BE20", "#FFFFFF"],
+  "Detroit Pistons": ["#C8102E", "#1D42BA", "#FFFFFF"],
+  "Oklahoma City Thunder": ["#007AC1", "#EF3B24", "#FFFFFF"],
+  "Indiana Pacers": ["#002D62", "#FDBB30", "#FDBB30"],
+};
+const TEAM_WORD = {
+  "Golden State Warriors": "WARRIORS", "Houston Rockets": "ROCKETS", "Minnesota Timberwolves": "TIMBERWOLVES",
+  "Detroit Pistons": "PISTONS", "Oklahoma City Thunder": "THUNDER", "Indiana Pacers": "PACERS",
+};
+// listed height (in), build, the number he wore in these seasons, and motion cues from his well-known form
+const PROFILES = {
+  "Stephen Curry": { heightIn: 74, build: 0.92, number: "30", motion: { tempo: 1.3, early: 1, jump: 0.9, dip: 0.8, setHigh: -4, turnAway: 0.5 },
+    cue: "Quick, one-motion release on the way up, and on some shots he turns away before the ball drops." },
+  "James Harden": { heightIn: 77, build: 1.15, number: "13", hair: "tall", beard: true, lefty: true, motion: { tempo: 0.95, dip: 1.1, step: 2.4, fade: 0.5, jump: 0.85 },
+    cue: "Left-handed, with a long step back and a fade away from the defender." },
+  "Anthony Edwards": { heightIn: 76, build: 1.12, number: "5", motion: { tempo: 1.05, jump: 1.35 },
+    cue: "Explosive lift into the pull-up, releasing at the top of a big jump." },
+  "Malik Beasley": { heightIn: 76, build: 0.98, number: "5", motion: { tempo: 1.2, dip: 0.6, jump: 0.85 },
+    cue: "Quick catch-and-shoot with a short dip." },
+  "Klay Thompson": { heightIn: 78, build: 1.0, number: "11", motion: { tempo: 1.1, dip: 0.5, jump: 0.75, hold: 1.5 },
+    cue: "Compact, textbook catch-and-shoot: almost no dip and a long, held follow-through." },
+  "Paul George": { heightIn: 80, build: 0.95, number: "13", motion: { setHigh: 8 },
+    cue: "Long arms and a high release point." },
+  "Buddy Hield": { heightIn: 76, build: 1.02, number: "24", motion: { tempo: 1.2, dip: 0.7, fade: 0.15, jump: 0.9 },
+    cue: "Quick trigger with a slight fade." },
 };
 const MIX_KEYS = ["Standard jumper", "Pull-up", "Step-back", "Other"];
 const MIX_COLOR = { "Standard jumper": SERIES[0], "Pull-up": SERIES[1], "Step-back": SERIES[2], Other: "#6b7280" };
 const STYLE_OF = { "Standard jumper": "standard", "Pull-up": "pullup", "Step-back": "stepback", Other: "standard" };
-const STYLE_NAME = { standard: "a standard jump shot", pullup: "a pull-up jumper", stepback: "a step-back jumper" };
+const KEY_NAME = { "Standard jumper": "a standard jump shot", "Pull-up": "a pull-up jumper", "Step-back": "a step-back jumper",
+  Other: "one of his other attempts (fadeaways, floaters), drawn as a jumper" };
+const feetIn = (n) => `${Math.floor(n / 12)}′${n % 12}″`;
+
+function jerseySVG(word, number, [jersey, trim, ink]) {
+  const fit = Math.min(68, word.length * 8.2);
+  return `<svg viewBox="0 0 100 112">
+    <path d="M28 4 C34 17 66 17 72 4 L84 8 C82 22 86 34 94 40 L94 108 L6 108 L6 40 C14 34 18 22 16 8 Z" fill="${jersey}" stroke="${trim}" stroke-width="3.5" stroke-linejoin="round"/>
+    <text x="50" y="45" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="13" fill="${ink}" textLength="${fit}" lengthAdjust="spacingAndGlyphs">${word}</text>
+    <text x="50" y="90" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="42" fill="${ink}" stroke="${trim}" stroke-width="1.2" paint-order="stroke">${number}</text>
+  </svg>`;
+}
 
 function pickShooter(S) {
   const el = document.getElementById("c-top"), courtEl = document.getElementById("st-court");
   const CURRY = ZONE_COLOR["Above-break 3"], OTHER = "#5b6272";
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let sel = -1, hoverTimer = 0, draw = () => {};
+  const keysQ = [];   // shot categories waiting to be shown, in the order the scene will play them
   const cur = () => S[sel];
-  const share = (p, style) => MIX_KEYS.filter((m) => STYLE_OF[m] === style).reduce((a, m) => a + p.mix[m], 0);
+  const colors = (p) => TEAM_COLORS[p.team] || [CURRY, "#e3e6ec", "#ffffff"];
+  const profileOf = (p) => {
+    const pr = PROFILES[p.name] || {}, [jersey, trim, numColor] = colors(p);
+    return { ...pr, jersey, trim, numColor };
+  };
 
   const scene = Hoops.scene(courtEl, {
     kMax: 17, spanFt: 37,
-    onShot(style) {
-      const p = cur();
+    onShot() {
+      const p = cur(), key = keysQ.shift() || "Standard jumper";
       document.getElementById("st-shot").innerHTML =
-        `This shot: <strong>${STYLE_NAME[style]}</strong> · ${fmt.pct(share(p, style))} of his 3-point attempts that season`;
+        `This shot: <strong>${KEY_NAME[key]}</strong> · ${fmt.pct(p.mix[key])} of his 3-point attempts that season`;
     },
   });
   responsive(courtEl, (w) => scene.layout(w));
 
-  // the player's most common type of three
-  function primary(p) {
-    const best = ["Standard jumper", "Pull-up", "Step-back"].reduce((a, m) => (p.mix[m] > p.mix[a] ? m : a), "Standard jumper");
-    return STYLE_OF[best];
-  }
-  // a type drawn at random from the player's real mix
-  function randomStyle(p) {
+  // the player's most common type of three, and a type drawn at random from his real mix
+  const primaryKey = (p) => ["Standard jumper", "Pull-up", "Step-back"].reduce((a, m) => (p.mix[m] > p.mix[a] ? m : a), "Standard jumper");
+  function randomKey(p) {
     let r = Math.random();
-    for (const m of MIX_KEYS) { r -= p.mix[m]; if (r <= 0) return STYLE_OF[m]; }
-    return "standard";
+    for (const m of MIX_KEYS) { r -= p.mix[m]; if (r <= 0) return m; }
+    return "Standard jumper";
   }
 
-  function select(i, { shoot = true, style } = {}) {
+  function select(i, { shoot = true, key } = {}) {
     const changed = i !== sel;
     sel = i;
-    const p = cur(), [jersey, trim] = TEAM_COLORS[p.team] || [CURRY, "#e3e6ec"];
+    const p = cur(), prof = profileOf(p);
     if (changed) {
-      scene.setPlayer({ distFt: p.avg_dist, jersey, trim, label: `${p.avg_dist} ft` });
+      keysQ.length = 0;
+      scene.setPlayer({ player: prof, distFt: p.avg_dist, label: `${p.avg_dist} ft` });
+      document.getElementById("st-jersey").innerHTML = jerseySVG(TEAM_WORD[p.team] || p.team.toUpperCase(), prof.number || "", colors(p));
       document.getElementById("st-name").textContent = p.name;
-      document.getElementById("st-sub").innerHTML = `<i class="team-dot" style="background:${jersey}"></i>${p.season} · ${p.team}`;
+      document.getElementById("st-sub").innerHTML = `<i class="team-dot" style="background:${prof.jersey}"></i>${p.season} · ${p.team}` +
+        (prof.number ? ` · #${prof.number}` : "") + (prof.heightIn ? ` · ${feetIn(prof.heightIn)}` : "");
+      document.getElementById("st-cue").textContent = prof.cue || "";
       const stats = [["Made", p.fg3m, "made"], ["Attempted", fmt.int(p.fg3a)], ["3-point %", fmt.pct(p.fg3_pct)], ["Avg distance", `${p.avg_dist} ft`]];
       document.getElementById("st-stats").innerHTML = stats
         .map(([k, v, id]) => `<div class="s"><div class="k">${k}</div><div class="v"${id ? ` id="st-${id}"` : ""}>${v}</div></div>`).join("");
@@ -793,7 +877,11 @@ function pickShooter(S) {
       document.getElementById("st-shot").innerHTML = "How his 3-point attempts were taken that season:";
       draw();
     }
-    if (shoot) scene.shoot(style || (changed ? primary(p) : randomStyle(p)));
+    if (shoot && keysQ.length < 4) {
+      const k = key || (changed ? primaryKey(p) : randomKey(p));
+      keysQ.push(k);
+      scene.shoot(STYLE_OF[k]);
+    }
   }
 
   responsive(el, (W) => {
@@ -849,7 +937,7 @@ function pickShooter(S) {
     draw();
   });
 
-  const again = () => select(sel, { shoot: true, style: randomStyle(cur()) });
+  const again = () => select(sel, { shoot: true, key: randomKey(cur()) });
   document.getElementById("st-again").addEventListener("click", again);
   courtEl.addEventListener("click", again);
   courtEl.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); again(); } });
@@ -858,14 +946,14 @@ function pickShooter(S) {
   // take the first shot when the stage scrolls into view
   if (!reduce && "IntersectionObserver" in window) {
     const io = new IntersectionObserver((en) => {
-      if (en[0].isIntersecting) { io.disconnect(); select(sel, { shoot: true, style: primary(cur()) }); }
+      if (en[0].isIntersecting) { io.disconnect(); select(sel, { shoot: true, key: primaryKey(cur()) }); }
     }, { threshold: 0.6 });
     io.observe(courtEl);
   }
 
   dataTable(document.getElementById("t-top"), S, [
-    ["Player", (d) => d.name], ["Season", (d) => d.season], ["Team", (d) => d.team], ["3PM", (d) => d.fg3m], ["3PA", (d) => d.fg3a, fmt.int],
-    ["3P%", (d) => d.fg3_pct, fmt.pct], ["Avg 3PA distance", (d) => d.avg_dist, (v) => v.toFixed(1) + " ft"],
+    ["Player", (d) => d.name], ["Season", (d) => d.season], ["Team", (d) => d.team], ["Jersey", (d) => (PROFILES[d.name] ? "#" + PROFILES[d.name].number : "")],
+    ["3PM", (d) => d.fg3m], ["3PA", (d) => d.fg3a, fmt.int], ["3P%", (d) => d.fg3_pct, fmt.pct], ["Avg 3PA distance", (d) => d.avg_dist, (v) => v.toFixed(1) + " ft"],
     ...MIX_KEYS.map((mk) => [mk, (d) => d.mix[mk], fmt.pct]),
   ]);
 }

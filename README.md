@@ -4,7 +4,7 @@ A data story and an interactive dashboard about the NBA's 3-point revolution, bu
 **every regular-season NBA shot from 2003-04 through 2024-25** (4.45 million rows).
 
 - **Live site:** https://chuckstew460-collab.github.io/nba-shots/
-- **Report:** [`index.html`](index.html): a click-to-shoot 3-point game, headline numbers, 12 findings each with an interactive chart, a draggable season-by-season shot-chart timeline, and a data & methods section
+- **Report:** [`index.html`](index.html): a playable court at the top (arrow keys move, Space shoots, D dunks), headline numbers, 12 findings each with an interactive chart, a draggable season-by-season shot-chart timeline, and a data & methods section
 - **Dashboard:** [`dashboard.html`](dashboard.html): filter by season, team, court zone, shot type, quarter and home/away; switch the measure and the breakdown; every number, chart and table recalculates in the browser
 
 ## Where the data comes from
@@ -36,7 +36,7 @@ shot, 2PT or 3PT, and made or missed.
 | `dashboard.html` | The dashboard page: filters, summary tiles, measure and breakdown switches, five charts, a sortable table with CSV download, and a reset button |
 | `css/style.css` | One stylesheet shared by both pages: navigation bar, fonts (Oswald + Inter), colors, cards, tooltips, tables, dashboard controls |
 | `js/common.js` | Helpers shared by both pages: number formatting, the hover tooltip, data tables, court drawing, hexagon shapes, the points-per-shot color scale, zone colors |
-| `js/shooter.js` | The basketball animation engine: a side-view court and hoop, a jointed player figure with three shooting motions (standard jumper, pull-up, step-back), and balls that fly on a gravity arc and swish through the net. Used by the click-to-shoot game at the top of the report and the pick-a-shooter stage in section 9 |
+| `js/shooter.js` | The basketball animation engine: a side-view court and hoop, a jointed player figure that runs, shoots (standard jumper, pull-up, step-back) and dunks, and balls that fly on a gravity arc and swish through the net. Player profiles set height, build, jersey colors and number, and motion cues. Used by the playable court at the top of the report and the pick-a-shooter stage in section 9 |
 | `js/report.js` | Builds every chart on the report from `data/processed/report.json` (D3), including the draggable timeline and the headline tiles |
 | `js/dashboard.js` | Loads the dashboard data, applies the filters, does all calculations in the browser, and draws the tiles, charts and table |
 | `favicon.svg` | The basketball icon shown in the browser tab |

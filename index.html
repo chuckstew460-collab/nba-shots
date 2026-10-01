@@ -35,17 +35,27 @@
     </div>
 
     <div class="shootaround" id="shootaround">
-      <div class="sa-panel">
-        <p class="sa-tag">Your turn · shoot from 25 feet</p>
-        <div class="sa-count"><span id="sa-made">0</span><small>threes made</small></div>
-        <p class="sa-note" id="sa-note">Click anywhere on the court to let it fly.</p>
-        <button class="btn primary" id="sa-shoot" type="button">
-          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M1.5 8h13M8 1.5v13" stroke="currentColor" stroke-width="1.2"/></svg>
-          Shoot
-        </button>
+      <div class="sa-bar">
+        <div class="sa-score">
+          <p class="sa-tag">Your turn</p>
+          <div class="sa-count"><span id="sa-pts">0</span><small>points</small></div>
+          <div class="sa-split" id="sa-split">0 threes · 0 twos · 0 dunks</div>
+        </div>
+        <div class="sa-where" aria-live="polite">
+          <div class="sa-dist" id="sa-dist"></div>
+          <div class="sa-odds" id="sa-odds"></div>
+        </div>
+        <div class="sa-controls">
+          <button class="btn icon" id="sa-left" type="button" aria-label="Move away from the basket">&#9664;</button>
+          <button class="btn icon" id="sa-right" type="button" aria-label="Move toward the basket">&#9654;</button>
+          <button class="btn primary" id="sa-shoot" type="button">Shoot <span class="kbd">Space</span></button>
+          <button class="btn" id="sa-dunk" type="button">Dunk <span class="kbd">D</span></button>
+        </div>
       </div>
-      <div class="sa-court" id="sa-court" role="button" tabindex="0" aria-label="Basketball court. Click, or press Enter, to shoot a three-pointer."></div>
+      <div class="sa-court" id="sa-court" role="button" tabindex="0" aria-label="Basketball court. Click to shoot. Arrow keys move the player, Space shoots, D dunks."></div>
+      <p class="sa-hint">Keyboard: <span class="kbd">&larr;</span> <span class="kbd">&rarr;</span> move · <span class="kbd">Space</span> or <span class="kbd">&uarr;</span> shoot · <span class="kbd">D</span> or <span class="kbd">&darr;</span> dunk · or click the court. Behind the orange line it’s a three; inside it’s a two.</p>
     </div>
+
     <p class="summary">
       This report covers every regular-season NBA field-goal attempt from 2003-04 through 2024-25:
       <strong>4,441,371 shots</strong> by 2,265 players on all 30 franchises across 26,457 games, each one tagged with where on the floor
@@ -306,7 +316,8 @@
       </p>
       <p class="lede">
         <strong>Pick a shooter below.</strong> Hover over or tap any of the 15 best seasons to watch that player take a three from his
-        average 3-point distance that season. Each figure shoots the way the data says he did: <strong>52.8%</strong> of James Harden’s
+        average 3-point distance that season, wearing his team’s colors and the number he wore that year, at his listed height. Each
+        figure shoots the way the data says he did: <strong>52.8%</strong> of James Harden’s
         2018-19 three-point attempts were <strong>step-backs</strong>, <strong>46.2%</strong> of Anthony Edwards’ 2024-25 attempts were
         <strong>pull-ups</strong>, and 69.8% of Curry’s 2015-16 attempts were standard jump shots. The first shot is each player’s most common
         type, and every “shoot again” draws from his real mix.
@@ -323,7 +334,12 @@
           <div class="chart" id="c-top"></div>
           <div class="stage">
             <div class="stage-head">
-              <div><div class="stage-name" id="st-name"></div><div class="stage-sub" id="st-sub"></div></div>
+              <div class="jersey-card" id="st-jersey" aria-hidden="true"></div>
+              <div class="stage-id">
+                <div class="stage-name" id="st-name"></div>
+                <div class="stage-sub" id="st-sub"></div>
+                <div class="stage-cue" id="st-cue"></div>
+              </div>
               <button class="btn" id="st-again" type="button">Shoot again</button>
             </div>
             <div class="stage-court" id="st-court" role="button" tabindex="0" aria-label="Shoot again"></div>
@@ -477,8 +493,10 @@
       <dt>Home / away</dt><dd>a shot is a home shot when the shooter’s team abbreviation matches the game’s home team.</dd>
       <dt>Shooter mix and distance (section 9)</dt><dd>for each of the 15 top seasons, the share of the player’s 3-point attempts in each
         shot type (“standard jumper” is the NBA’s plain “Jump Shot” description and its close variants; pull-up and step-back as labeled),
-        and the mean recorded distance of those attempts, backcourt heaves excluded. The animated figures are drawings, not footage:
-        each one stands at that average distance and uses a shooting motion for the chosen shot type.</dd>
+        and the mean recorded distance of those attempts, backcourt heaves excluded. The animated figures are stylized drawings, not footage or
+        motion capture: each one has the player’s listed height, his team’s colors and that season’s jersey number, stands at his average
+        distance, and adds motion cues from his well-known form (Curry’s quick release, Harden’s left-handed step-back, Klay Thompson’s
+        compact catch-and-shoot, Anthony Edwards’ explosive pull-up) to the shot type being shown.</dd>
       <dt>Volume shooters (section 9)</dt><dd>players with at least 300 (or 500) 3-point attempts in a season, counting all shots including heaves.</dd>
     </dl>
 
