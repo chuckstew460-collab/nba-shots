@@ -353,6 +353,21 @@
         </div>
         <div id="t-top"></div>
       </div>
+      <div class="card film">
+        <div class="card-head"><span class="card-title">Film room: the real thing</span><span class="card-sub">A 30-second reel: about 10 seconds each of Curry, Harden and Klay Thompson</span></div>
+        <div class="film-grid">
+          <div class="film-frame" id="film-frame">
+            <button class="film-start" id="film-start" type="button" aria-label="Play the 30-second reel"></button>
+            <button class="btn film-replay" id="film-replay" type="button">↻ Replay the reel</button>
+          </div>
+          <div class="film-side">
+            <div class="film-bars" id="film-bars" aria-hidden="true"></div>
+            <ol class="film-list" id="film-list"></ol>
+            <p class="card-sub">The clips stream from official uploads by the NBA and the Golden State Warriors on YouTube; nothing is copied into this
+              site. Click a name to jump to that player.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -497,6 +512,8 @@
         motion capture: each one has the player’s listed height, his team’s colors and that season’s jersey number, stands at his average
         distance, and adds motion cues from his well-known form (Curry’s quick release, Harden’s left-handed step-back, Klay Thompson’s
         compact catch-and-shoot, Anthony Edwards’ explosive pull-up) to the shot type being shown.</dd>
+      <dt>Film room (section 9)</dt><dd>embedded YouTube videos from the official NBA and Golden State Warriors channels, each played for about
+        10 seconds. They are illustration only; no number on this site comes from them.</dd>
       <dt>Volume shooters (section 9)</dt><dd>players with at least 300 (or 500) 3-point attempts in a season, counting all shots including heaves.</dd>
     </dl>
 
@@ -520,5 +537,6 @@
 <script src="js/common.js"></script>
 <script src="js/shooter.js"></script>
 <script src="js/report.js"></script>
+<script src="js/film.js"></script>
 </body>
 </html>
