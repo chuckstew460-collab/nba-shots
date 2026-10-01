@@ -23,7 +23,10 @@ const BY = {
   zone: { label: "Court zone", lower: "court zone", explain: "Each line, bar and row is one part of the floor." },
   team: { label: "Team", lower: "team", explain: `Each bar and row is one team. The trend chart colors up to ${MAX_TEAM_LINES} teams: choose them in the Teams filter above.` },
   loc: { label: "Home vs. away", lower: "home vs. away", explain: "Home games compared with road games." },
+  leader: { label: "3-point leaders vs. rest", lower: "3-point leader vs. the rest",
+    explain: "Each season’s 3-point leader is the team that took the biggest share of its shots from three that year: the Suns of the mid-2000s, the Magic, the Rockets, the Celtics and more. This view compares them with every other team that same season. The Teams filter doesn’t apply here." },
 };
+const LEAD_COLOR = SERIES[1], REST_COLOR = SERIES[0];
 function measure(key, a) {
   if (!a || !a.fga) return NaN;
   if (key === "pg") return a.games ? a.fga / a.games : NaN;
@@ -44,7 +47,8 @@ Promise.all([
   d3.csv(asset("data/processed/teams.csv")),
   d3.csv(asset("data/processed/bins.csv"), nums("s", "t", "z", "l", "h", "n", "m", "p")),
   d3.json(asset("data/processed/bins_key.json")),
-]).then(([cube, games, teams, bins, key]) => {
+  d3.csv(asset("data/processed/leaders.csv")),
+]).then(([cube, games, teams, bins, key, leaders]) => {
   // guard against a stale cached file from before an update
   if (!cube.columns.includes("loc") || !bins.columns.includes("h") || !key.hexes) throw new Error("stale data files");
   const seasons = Array.from(new Set(cube.map((d) => d.season))).sort();
@@ -58,7 +62,10 @@ Promise.all([
   // map bins arrive as codes; translate their season/team/zone/loc codes onto ours
   const bs = key.seasons.map((s) => si.get(s)), bt = key.teams.map((t) => ti.get(t)), bz = key.zones.map((z) => zi.get(z)), bl = key.locs.map((l) => li.get(l));
   const B = bins.map((b) => ({ s: bs[b.s], t: bt[b.t], z: bz[b.z], l: bl[b.l], h: b.h, n: b.n, m: b.m, p: b.p }));
-  D = { seasons, teams: teamCodes, teamName, rows, G, B, hexes: key.hexes };
+  // each season's 3-point leader (team index) and the name it played under that year
+  const leader = seasons.map(() => -1), leaderName = seasons.map(() => "");
+  leaders.forEach((r) => { leader[si.get(r.season)] = ti.get(r.team); leaderName[si.get(r.season)] = r.name_then; });
+  D = { seasons, teams: teamCodes, teamName, rows, G, B, hexes: key.hexes, leader, leaderName };
   state = DEFAULTS();
   buildControls();
   document.getElementById("loading").hidden = true;
@@ -81,15 +88,17 @@ const blank = () => ({ fga: 0, fgm: 0, fg3a: 0, pts: 0, games: 0 });
 const add = (o, r) => { o.fga += r.fga; o.fgm += r.fgm; o.fg3a += r.fg3a; o.pts += r.pts; };
 
 function groupsOf(st) {
+  if (st.by === "leader") return [{ key: "lead", name: "3-point leader", color: LEAD_COLOR }, { key: "rest", name: "Rest of the league", color: REST_COLOR }];
   if (st.by === "zone") return ZONES.filter((z) => st.zones.has(z)).map((z) => ({ key: z, name: z, color: ZONE_COLOR[z], test: (r) => ZONES[r.z] === z }));
   if (st.by === "loc") return LOCS.filter((l) => st.locs.has(l)).map((l) => ({ key: l, name: l === "Home" ? "Home games" : "Away games", color: LOC_COLOR[l], test: (r) => LOCS[r.l] === l }));
   return D.teams.filter((t) => st.teams.has(t)).map((t) => ({ key: t, name: D.teamName.get(t), color: teamColor(t), test: (r) => D.teams[r.t] === t }));
 }
 
 function compute(st) {
-  const sAll = d3.range(st.from, st.to + 1), groups = groupsOf(st);
+  const sAll = d3.range(st.from, st.to + 1), groups = groupsOf(st), lead = st.by === "leader";
   const okZ = ZONES.map((z) => st.zones.has(z)), okL = LOCS.map((l) => st.locs.has(l)), okT = D.teams.map((t) => st.teams.has(t));
-  const gIndex = st.by === "zone" ? (r) => groups.findIndex((g) => g.key === ZONES[r.z])
+  const gIndex = lead ? (r) => (D.leader[r.s] === r.t ? 0 : 1)
+    : st.by === "zone" ? (r) => groups.findIndex((g) => g.key === ZONES[r.z])
     : st.by === "loc" ? (r) => groups.findIndex((g) => g.key === LOCS[r.l]) : (r) => groups.findIndex((g) => g.key === D.teams[r.t]);
   const sel = blank(), league = blank(), bySel = sAll.map(blank), byLeague = sAll.map(blank);
   const byG = groups.map(blank), bySG = sAll.map(() => groups.map(blank)), byGZ = groups.map(() => ZONES.map(blank)), bySZ = sAll.map(() => ZONES.map(blank));
@@ -98,6 +107,12 @@ function compute(st) {
     if (r.s < st.from || r.s > st.to || !okZ[r.z] || !okL[r.l]) continue;
     const si = r.s - st.from;
     add(league, r); add(byLeague[si], r); add(leagueZ[r.z], r);
+    if (lead) {   // every team counts: the season's leader in group 0, everyone else in group 1
+      const g = gIndex(r);
+      add(byG[g], r); add(bySG[si][g], r); add(byGZ[g][r.z], r);
+      if (g === 0) { add(sel, r); add(bySel[si], r); add(bySZ[si][r.z], r); }
+      continue;
+    }
     if (!okT[r.t]) continue;
     add(sel, r); add(bySel[si], r); add(bySZ[si][r.z], r);
     const g = gIndex(r);
@@ -107,6 +122,12 @@ function compute(st) {
   const tSel = D.teams.map((t, i) => (st.teams.has(t) ? i : -1)).filter((i) => i >= 0), tAll = D.teams.map((_, i) => i);
   const lSel = LOCS.map((l, i) => (st.locs.has(l) ? i : -1)).filter((i) => i >= 0);
   const games = (ss, ts, ls) => { let n = 0; for (const s of ss) for (const t of ts) for (const l of ls) n += D.G[s][t][l]; return n; };
+  if (lead) {
+    const gl = (s) => games([s], [D.leader[s]], lSel), ga = (s) => games([s], tAll, lSel);
+    sAll.forEach((s, i) => { bySG[i][0].games = bySel[i].games = gl(s); byLeague[i].games = ga(s); bySG[i][1].games = ga(s) - gl(s); });
+    sel.games = byG[0].games = d3.sum(sAll, gl); league.games = d3.sum(sAll, ga); byG[1].games = league.games - sel.games;
+    return { sAll, groups, sel, league, bySel, byLeague, byG, bySG, byGZ, bySZ, leagueZ, allTeams: false, lead };
+  }
   const gFor = (ss, g) => (st.by === "team" ? games(ss, [D.teams.indexOf(groups[g].key)], lSel) : st.by === "loc" ? games(ss, tSel, [LOCS.indexOf(groups[g].key)]) : games(ss, tSel, lSel));
   sel.games = games(sAll, tSel, lSel); league.games = games(sAll, tAll, lSel);
   sAll.forEach((s, i) => { bySel[i].games = games([s], tSel, lSel); byLeague[i].games = games([s], tAll, lSel); });
@@ -201,14 +222,22 @@ function update() {
   const m = MEASURES[state.m], by = BY[state.by];
   document.getElementById("measure-explain").innerHTML = m.explain;
   document.getElementById("by-explain").textContent = by.explain;
-  document.getElementById("t1").textContent = `${m.label} by season, split by ${by.lower}`;
-  document.getElementById("t2").textContent = `${m.label} by ${by.lower}, all selected seasons combined`;
+  const lead = state.by === "leader";
+  document.getElementById("f-team").closest(".filter").classList.toggle("muted", lead);
+  document.getElementById("t1").textContent = lead ? `${m.label} by season: each year’s 3-point leader vs. the rest of the league` : `${m.label} by season, split by ${by.lower}`;
+  document.getElementById("t2").textContent = lead ? `${m.label}: the gap between each season’s 3-point leader and everyone else` : `${m.label} by ${by.lower}, all selected seasons combined`;
   document.getElementById("t4").textContent = state.by === "zone" ? "Shot mix by season: what share of shots came from each zone" : `Shot mix by ${by.lower}: what share of shots came from each zone`;
-  document.getElementById("t5").textContent = `The numbers, by ${by.lower}`;
+  document.getElementById("t5").textContent = lead ? "The numbers: each season’s 3-point leader vs. the rest" : `The numbers, by ${by.lower}`;
+  document.getElementById("h5").textContent = lead
+    ? "One row per season: the team that led the league in 3-point share, its number, everyone else’s, and the gap. The bottom row combines all selected seasons."
+    : "The exact numbers behind the charts. Click a column header to sort. The last two rows are your whole selection and the whole league for the same seasons, zones and games.";
   document.getElementById("h1").innerHTML = trendHowto();
-  document.getElementById("h2").innerHTML = "Bars start at zero. " + (state.by === "team" ? "The white line is the league average for comparison. "
+  document.getElementById("h2").innerHTML = lead
+    ? `<b style="color:${LEAD_COLOR}">●</b> the season’s 3-point leader, <b style="color:${REST_COLOR}">●</b> every other team that season combined; the number is the gap. The axis starts at zero. Hover a row for details.`
+    : "Bars start at zero. " + (state.by === "team" ? "The white line is the league average for comparison. "
     : state.by === "zone" && state.m === "pg" ? "Together the bars add up to all the shots per game. " : "The white line is your whole selection for comparison. ") + "Hover a bar for every number.";
-  document.getElementById("h4").textContent = state.by === "zone"
+  document.getElementById("h4").textContent = lead ? "Where the 3-point leaders took their shots compared with everyone else. Each row adds up to 100%."
+    : state.by === "zone"
     ? "Each row is one season and adds up to 100%. Watch the orange mid-range band shrink and the blue 3-point bands grow."
     : "Each row adds up to 100%, so you can compare where different groups take their shots" + (state.by === "team" ? ", with the league at the bottom." : ".");
   renderStatus(); renderKPIs();
@@ -216,6 +245,8 @@ function update() {
   renderTable();
 }
 function trendHowto() {
+  if (state.by === "leader") return `<b style="color:${LEAD_COLOR}">Orange</b> = each season’s 3-point leader (hover to see which team), <b style="color:${REST_COLOR}">blue</b> = every other team that season combined. ` +
+    (state.m === "fg" || state.m === "pps" ? "<b>The y-axis is zoomed in</b> (it doesn’t start at zero)." : "The y-axis starts at zero.");
   const axis = state.m === "fg" || state.m === "pps"
     ? "<b>The y-axis is zoomed in</b> (it doesn’t start at zero) so small differences are visible; read the numbers, not just the gaps, and use the bar chart below for true-to-scale sizes."
     : "The y-axis starts at zero, so the gaps are true to scale.";
@@ -228,7 +259,8 @@ function trendHowto() {
 function listNames(arr, max = 3) { return arr.length <= max ? arr.join(", ").replace(/, ([^,]*)$/, " and $1") : `${arr.slice(0, max).join(", ")} and ${arr.length - max} more`; }
 function renderStatus() {
   const s = state, seasons = s.from === s.to ? D.seasons[s.from] : `${D.seasons[s.from]} to ${D.seasons[s.to]}`;
-  const teams = R.allTeams ? "all 30 teams" : s.teams.size ? listNames(D.teams.filter((t) => s.teams.has(t)).map((t) => D.teamName.get(t))) : "no teams";
+  const leadNames = Array.from(new Set(R.sAll.map((x) => D.leaderName[x])));
+  const teams = R.lead ? `each season’s 3-point leader (${listNames(leadNames, 4)})` : R.allTeams ? "all 30 teams" : s.teams.size ? listNames(D.teams.filter((t) => s.teams.has(t)).map((t) => D.teamName.get(t))) : "no teams";
   const zones = s.zones.size === ZONES.length ? "every court zone" : s.zones.size ? listNames(ZONES.filter((z) => s.zones.has(z)), 4) : "no zones";
   const locs = s.locs.size === 2 ? "home and away games" : s.locs.size ? `${Array.from(s.locs)[0].toLowerCase()} games only` : "no games";
   const txt = `Showing <strong>${fmt.int(R.sel.fga)}</strong> shots by ${teams} · ${seasons} · ${zones} · ${locs}`;
@@ -318,7 +350,8 @@ function drawTrend(el, W) {
         paths.filter((s) => s === near.s).raise();
         tip.show(e, tipHTML(near.s.name, [[M.label, M.f(near.p.y)], ["Rank that season", `${at.indexOf(near) + 1} of ${at.length}`], ...lg], { sub: seasons[i] }));
       } else {
-        tip.show(e, tipHTML(seasons[i], [...at.map((o) => [o.s.name, M.f(o.p.y), o.s.color]), ...lg], { sub: M.label }));
+        tip.show(e, tipHTML(seasons[i], [...at.map((o) => [o.s.name, M.f(o.p.y), o.s.color]), ...lg],
+          { sub: R.lead ? `3-point leader: ${D.leaderName[R.sAll[i]]}` : M.label }));
       }
     })
     .on("pointerleave", () => {
@@ -328,8 +361,36 @@ function drawTrend(el, W) {
 }
 
 /* ================================================================== chart 2: bars */
+function gapText(m, d) { return m === "pg" ? fmt.signed(d, 1) : m === "pps" ? fmt.signed(d) : fmt.signedPct(d); }
+function drawDumbbell(el, W) {
+  const m = state.m, M = MEASURES[m];
+  const rows = R.sAll.map((s, i) => ({ s, season: D.seasons[s], name: D.leaderName[s], a: R.bySG[i][0], b: R.bySG[i][1], va: measure(m, R.bySG[i][0]), vb: measure(m, R.bySG[i][1]) }))
+    .filter((r) => !isNaN(r.va) && !isNaN(r.vb)).reverse();
+  if (!rows.length) return emptyNote(el);
+  const labelW = Math.min(205, Math.max(120, W * 0.4)), rowH = 22, mg = { t: 6, r: 64, b: 26, l: labelW }, w = W - mg.l - mg.r, h = rowH * rows.length;
+  const svg = svgIn(el, W, h + mg.t + mg.b), g = svg.append("g").attr("transform", `translate(${mg.l},${mg.t})`);
+  const yb = d3.scaleBand().domain(rows.map((r) => r.s)).range([0, h]);
+  const x = d3.scaleLinear().domain([0, d3.max(rows, (r) => Math.max(r.va, r.vb)) * 1.05]).nice().range([0, w]);
+  g.append("g").attr("class", "grid").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(4).tickSize(-h).tickFormat(""));
+  g.append("g").attr("class", "axis no-line").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(4).tickSize(0).tickPadding(8).tickFormat(m === "pps" ? (v) => v.toFixed(1) : M.ax));
+  const cy = (r) => yb(r.s) + yb.bandwidth() / 2;
+  g.selectAll("text.name").data(rows).join("text").attr("class", "axis-label").attr("x", -10).attr("y", (r) => cy(r) + 4).attr("text-anchor", "end").style("font-size", "11.5px")
+    .text((r) => `${shortSeason(r.season)} · ${W < 520 ? r.name.split(" ").slice(-1)[0] : r.name}`);
+  const rowG = g.append("g").selectAll("g").data(rows).join("g");
+  rowG.append("line").attr("x1", (r) => x(r.vb)).attr("x2", (r) => x(r.va)).attr("y1", cy).attr("y2", cy).attr("stroke", "#5b6272").attr("stroke-width", 3).attr("stroke-linecap", "round");
+  rowG.append("circle").attr("cx", (r) => x(r.vb)).attr("cy", cy).attr("r", 5).attr("fill", REST_COLOR).attr("stroke", SURFACE).attr("stroke-width", 2);
+  rowG.append("circle").attr("cx", (r) => x(r.va)).attr("cy", cy).attr("r", 6).attr("fill", LEAD_COLOR).attr("stroke", SURFACE).attr("stroke-width", 2);
+  rowG.append("text").attr("class", "direct-label").attr("x", (r) => x(Math.max(r.va, r.vb)) + 10).attr("y", (r) => cy(r) + 4).text((r) => gapText(m, r.va - r.vb));
+  g.append("g").selectAll("rect").data(rows).join("rect").attr("x", -labelW).attr("width", W).attr("y", (r) => yb(r.s)).attr("height", yb.step()).attr("fill", "transparent")
+    .on("pointerenter", (e, r) => rowG.attr("opacity", (q) => (q === r ? 1 : 0.4)))
+    .on("pointermove", (e, r) => tip.show(e, tipHTML(r.name, [[`3-point leader`, M.f(r.va), LEAD_COLOR], ["Rest of the league", M.f(r.vb), REST_COLOR], ["Gap", gapText(m, r.va - r.vb)],
+      ["Leader’s 3-point share", fmt.pct(measure("share3", r.a))]], { sub: `${r.season} · ${M.label}` })))
+    .on("pointerleave", () => { rowG.attr("opacity", 1); tip.hide(); });
+}
+
 function drawBars(el, W) {
   if (!R.sel.fga) return emptyNote(el);
+  if (R.lead) return drawDumbbell(el, W);
   const m = state.m, M = MEASURES[m];
   let rows = R.groups.map((g, i) => ({ ...g, a: R.byG[i], v: measure(m, R.byG[i]) })).filter((r) => !isNaN(r.v));
   if (state.by === "team") rows.sort((a, b) => b.v - a.v);
@@ -403,12 +464,12 @@ function drawMap(el, Wc) {
   const st = state, okT = D.teams.map((t) => st.teams.has(t)), okZ = ZONES.map((z) => st.zones.has(z)), okL = LOCS.map((l) => st.locs.has(l));
   const agg = new Map(); let total = 0;
   for (const b of D.B) {
-    if (b.s < st.from || b.s > st.to || !okT[b.t] || !okZ[b.z] || !okL[b.l]) continue;
+    if (b.s < st.from || b.s > st.to || !okZ[b.z] || !okL[b.l] || !(st.by === "leader" ? D.leader[b.s] === b.t : okT[b.t])) continue;
     let o = agg.get(b.h);
     if (!o) { o = { x: D.hexes[b.h][0], y: D.hexes[b.h][1], n: 0, m: 0, p: 0 }; agg.set(b.h, o); }
     o.n += b.n; o.m += b.m; o.p += b.p; total += b.n;
   }
-  document.getElementById("lg-map").innerHTML = `${ppsLegend()}<span class="legend-item">${fmt.int(total)} shots mapped</span>`;
+  document.getElementById("lg-map").innerHTML = `${ppsLegend()}<span class="legend-item">${fmt.int(total)} shots mapped${st.by === "leader" ? " · the 3-point leaders only" : ""}</span>`;
   if (!total) return emptyNote(el);
   const hexes = Array.from(agg.values()).filter((o) => o.n >= Math.max(3, total * 0.00004));
   hexes.forEach((o) => (o.share = o.n / total));
@@ -433,9 +494,22 @@ function drawMap(el, Wc) {
 let sortKey = null, sortDir = -1;
 const COLS = [["name", "Group"], ["fga", "Shots"], ["fgm", "Made"], ...Object.entries(MEASURES).map(([k, m]) => [k, m.label])];
 const rowOf = (name, a, extra = {}) => ({ name, fga: a.fga, fgm: a.fgm, ...Object.fromEntries(Object.keys(MEASURES).map((k) => [k, measure(k, a)])), ...extra });
+function leaderRows() {
+  return R.sAll.map((s, i) => ({ season: D.seasons[s], name: D.leaderName[s], a: R.bySG[i][0], b: R.bySG[i][1] })).filter((r) => r.a.fga && r.b.fga);
+}
+function renderLeaderTable(t) {
+  const m = state.m, M = MEASURES[m], rows = leaderRows();
+  const extra = m !== "share3";   // also show the 3-point shares unless they're already the measure
+  const cells = (r, label, name) => `<td>${label}</td><td style="text-align:left">${name}</td><td>${M.f(measure(m, r.a))}</td><td>${M.f(measure(m, r.b))}</td><td>${gapText(m, measure(m, r.a) - measure(m, r.b))}</td>` +
+    (extra ? `<td>${fmt.pct(measure("share3", r.a))}</td><td>${fmt.pct(measure("share3", r.b))}</td>` : "");
+  t.innerHTML = `<thead><tr><th>Season</th><th style="text-align:left">3-point leader</th><th style="color:var(--accent)">Leader: ${M.label}</th><th>Rest: ${M.label}</th><th>Gap</th>${extra ? "<th>Leader 3PA share</th><th>Rest 3PA share</th>" : ""}</tr></thead>
+    <tbody>${rows.map((r) => `<tr>${cells(r, r.season, r.name)}</tr>`).join("")}</tbody>
+    <tfoot><tr>${cells({ a: R.byG[0], b: R.byG[1] }, "All selected seasons", "All leaders combined")}</tr></tfoot>`;
+}
 function renderTable() {
   const t = document.getElementById("tbl");
   if (!R.sel.fga) { t.innerHTML = `<tbody><tr><td class="empty-note">No shots match these filters.</td></tr></tbody>`; return; }
+  if (R.lead) return renderLeaderTable(t);
   const rows = R.groups.map((g, i) => rowOf(g.name, R.byG[i], { color: state.by === "team" && !teamSlots.has(g.key) ? null : g.color })).filter((r) => r.fga > 0);
   if (sortKey) rows.sort((a, b) => (sortKey === "name" ? sortDir * d3.ascending(a.name, b.name) : sortDir * ((a[sortKey] || 0) - (b[sortKey] || 0))));
   const fmtCol = (k, v) => (k === "fga" || k === "fgm" ? fmt.int(v) : isNaN(v) ? "–" : MEASURES[k].f(v));
@@ -451,6 +525,15 @@ function renderTable() {
 }
 function downloadCSV() {
   if (!R || !R.sel.fga) return;
+  if (R.lead) {
+    const ks = Object.keys(MEASURES), head = ["Season", "3-point leader", ...ks.flatMap((k) => [`Leader ${MEASURES[k].label}`, `Rest ${MEASURES[k].label}`])];
+    const lines = leaderRows().map((r) => [r.season, `"${r.name}"`, ...ks.flatMap((k) => [measure(k, r.a), measure(k, r.b)].map((v) => v.toFixed(4)))].join(","));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([[head.join(","), ...lines].join("\n")], { type: "text/csv" }));
+    a.download = `nba-shots_3pt-leaders_${D.seasons[state.from]}_${D.seasons[state.to]}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    return;
+  }
   const rows = [...R.groups.map((g, i) => rowOf(g.name, R.byG[i])).filter((r) => r.fga > 0), rowOf("Your selection", R.sel), rowOf("Whole league", R.league)];
   const head = [BY[state.by].label, "Shots", "Made", "Shots per team-game", "Make rate", "Points per shot", "3-point share"];
   const line = (r) => [`"${r.name}"`, r.fga, r.fgm, r.pg, r.fg, r.pps, r.share3].map((v) => (typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(4)) : v)).join(",");

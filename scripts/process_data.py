@@ -5,6 +5,7 @@ Outputs: data/processed/report.json   numbers + chart data for index.html
          data/processed/cube.csv      shots summed by season x team x zone x home/away (dashboard)
          data/processed/games.csv     games per team, season and home/away (dashboard per-game)
          data/processed/teams.csv     team code -> name (dashboard)
+         data/processed/leaders.csv   each season's 3-point-share leader (dashboard)
          data/processed/bins.csv      hex-binned shot locations by the same four filters, as codes (dashboard map)
          data/processed/bins_key.json codes -> seasons, teams, zones, home/away, hexagon centres
 
@@ -296,6 +297,12 @@ def build_dashboard(d: pd.DataFrame):
     # games played by each team, split home/away (denominator for per-game measures)
     gm = d.groupby(["season", "code", "loc"]).game.nunique().rename("games").reset_index()
     gm.rename(columns={"code": "team"}).to_csv(OUT / "games.csv", index=False)
+
+    # each season's 3-point leader: the team with the biggest share of its shots from three
+    ts = d.groupby(["season", "code"]).agg(fga=("made", "size"), fg3a=("is3", "sum"), name_then=("TEAM_NAME", lambda x: x.mode()[0])).reset_index()
+    ts["three_share"] = ts.fg3a / ts.fga
+    lead = ts.sort_values("three_share", ascending=False).drop_duplicates("season").sort_values("season")
+    lead.rename(columns={"code": "team"})[["season", "team", "name_then", "three_share"]].round(4).to_csv(OUT / "leaders.csv", index=False)
 
     # franchise code -> current name
     teams = d.drop_duplicates("code").set_index("code")["team"].sort_index()

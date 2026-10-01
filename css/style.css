@@ -460,3 +460,6 @@ table.tbl tfoot tr.league td { color: var(--text-2); font-weight: 600; }
 .film-list { gap: 6px; max-height: 330px; overflow-y: auto; padding-right: 2px; }
 .film-list button { padding: 7px 10px; }
 .film-list small { font-size: 12.5px; }
+
+.filter.muted { opacity: 0.4; pointer-events: none; }
+.filter.muted .flabel::after { content: " (not used in this view)"; text-transform: none; letter-spacing: 0; }

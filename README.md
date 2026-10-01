@@ -5,7 +5,7 @@ A data story and an interactive dashboard about the NBA's 3-point revolution, bu
 
 - **Live site:** https://chuckstew460-collab.github.io/nba-shots/
 - **Report:** [`index.html`](index.html): a playable court at the top (arrow keys move, Space shoots, D dunks), headline numbers, 12 findings each with an interactive chart, a draggable season-by-season shot-chart timeline, and a data & methods section
-- **Dashboard:** [`dashboard.html`](dashboard.html): filter by seasons, teams, court zones and home/away; choose one of four measures (shots per game, make rate, points per shot, 3-point share) and split by zone, team or home vs. away; every number, chart and table recalculates in the browser and is compared with the league
+- **Dashboard:** [`dashboard.html`](dashboard.html): filter by seasons, teams, court zones and home/away; choose one of four measures (shots per game, make rate, points per shot, 3-point share) and split by zone, team, home vs. away, or each season's 3-point leader vs. the rest of the league; every number, chart and table recalculates in the browser and is compared with the league
 
 ## Where the data comes from
 
@@ -50,6 +50,7 @@ shot, 2PT or 3PT, and made or missed.
 | `data/processed/cube.csv` | The dashboard's main data: shots summed by season × team × court zone × home/away (6,590 rows; columns: attempts, makes, 3PA, 3PM, points) |
 | `data/processed/games.csv` | Games played by each team in each season, split home/away (denominator for "per game") |
 | `data/processed/teams.csv` | Franchise code → current team name |
+| `data/processed/leaders.csv` | Each season's 3-point leader (the team with the highest share of its shots from three) and the name it played under, for the dashboard's "3-point leaders vs. rest" view |
 | `data/processed/bins.csv` | Shot locations grouped into 1.6 ft hexagons by season × team × zone × home/away, for the dashboard shot map (312,453 rows, stored as small integer codes) |
 | `data/processed/bins_key.json` | Translates the codes in `bins.csv` back to seasons, teams, zones, home/away and hexagon centres |
 | `.gitignore` | Keeps Python cache files out of the repository |

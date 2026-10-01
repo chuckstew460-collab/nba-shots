@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=202610011712">
+  <link rel="stylesheet" href="css/style.css?v=202610011717">
 </head>
 <body>
 
@@ -40,7 +40,7 @@
   <ol class="steps" aria-label="How to use this dashboard">
     <li><b>1 · Filter</b><span>Choose seasons, teams, court zones and home or away games.</span></li>
     <li><b>2 · Measure</b><span>Choose what the charts show: volume, accuracy, value or 3-point share.</span></li>
-    <li><b>3 · Split</b><span>Choose how the charts are divided: by court zone, by team, or home vs. away.</span></li>
+    <li><b>3 · Split</b><span>Choose how the charts are divided: by court zone, by team, home vs. away, or each season’s 3-point leader vs. the rest of the league.</span></li>
   </ol>
 </div>
 
@@ -115,7 +115,7 @@
             Download CSV
           </button>
         </div>
-        <p class="howto">The exact numbers behind the charts. Click a column header to sort. The last two rows are your whole selection and the whole league for the same seasons, zones and games.</p>
+        <p class="howto" id="h5"></p>
         <div class="table-scroll" style="max-height:520px"><table class="tbl sortable" id="tbl"></table></div>
       </div>
     </div>
@@ -137,7 +137,7 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<script src="js/common.js?v=202610011712"></script>
-<script src="js/dashboard.js?v=202610011712"></script>
+<script src="js/common.js?v=202610011717"></script>
+<script src="js/dashboard.js?v=202610011717"></script>
 </body>
 </html>
