@@ -80,6 +80,14 @@ def clean(d: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
 
     d["season"] = d["SEASON_2"]
     d["year"] = d["SEASON_1"]
+
+    # 2019-20, 2020-21 and 2021-22 store court coordinates on a different scale
+    # (x max ~2.5 instead of 25). Rescaling with x*10 and y*10 - 52.5 reproduces the
+    # recorded SHOT_DISTANCE for every one of those shots, exactly as in other seasons.
+    bad = d["year"].isin([2020, 2021, 2022])
+    log["rescaled_coordinates"] = int(bad.sum())
+    d.loc[bad, "LOC_X"] = d.loc[bad, "LOC_X"] * 10
+    d.loc[bad, "LOC_Y"] = d.loc[bad, "LOC_Y"] * 10 - 52.5
     d["made"] = d["SHOT_MADE"].astype(bool).astype(int)
     d["is3"] = d["SHOT_TYPE"].eq("3PT Field Goal").astype(int)
     d["pts"] = d["made"] * np.where(d["is3"] == 1, 3, 2)
