@@ -581,7 +581,7 @@ function teamHeat(T, seasons) {
     const labelW = W < 860 ? 120 : 170;
     const m = { t: 6, r: 4, b: 28, l: labelW }, w = W - m.l - m.r;
     const cell = w / seasons.length, rowH = 19, h = rowH * teams.length;
-    const svg = svgIn(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+    const svg = svgIn(el, W, h + m.t + m.b).style("max-width", "none"), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
     const x = d3.scaleBand().domain(seasons).range([0, w]);
     const yb = d3.scaleBand().domain(teams.map((t) => t.team)).range([0, h]);
     const rowsG = g.selectAll("g.row").data(teams).join("g").attr("transform", (t) => `translate(0,${yb(t.team)})`);

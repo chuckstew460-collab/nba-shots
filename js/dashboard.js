@@ -438,7 +438,7 @@ function drawHeat(el, Wc) {
   const W = Math.max(Wc, 120 + seasons.length * 16);
   const labelW = Math.min(150, Math.max(90, W * 0.24)), m_ = { t: 4, r: 4, b: 26, l: labelW }, w = W - m_.l - m_.r;
   const rowH = groups.length > 12 ? 16 : 26, h = rowH * groups.length;
-  const svg = svgIn(el, W, h + m_.t + m_.b), g = svg.append("g").attr("transform", `translate(${m_.l},${m_.t})`);
+  const svg = svgIn(el, W, h + m_.t + m_.b).style("max-width", "none"), g = svg.append("g").attr("transform", `translate(${m_.l},${m_.t})`);
   const x = d3.scaleBand().domain(seasons).range([0, w]), yb = d3.scaleBand().domain(groups).range([0, h]);
   g.selectAll("text.name").data(groups).join("text").attr("class", "axis-label").attr("x", -8).attr("y", (c) => yb(c) + rowH / 2 + 4).attr("text-anchor", "end")
     .style("font-size", "11.5px").text((c) => { const nm = dim.name(dim.values[c]); return nm.length > 20 ? nm.slice(0, 19) + "…" : nm; });
