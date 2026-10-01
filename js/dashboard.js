@@ -318,7 +318,17 @@ function dropdown(id, options, get, set) {
       <div class="dd-list">${options.map(([v, l]) => `<label class="dd-opt" data-label="${l.toLowerCase()}"><input type="checkbox" value="${v}"> ${l}</label>`).join("")}</div>
     </div>`;
   const btn = host.querySelector(".dd-btn"), panel = host.querySelector(".dd-panel"), boxes = Array.from(host.querySelectorAll("input[type=checkbox]"));
-  const open = (o) => { panel.hidden = !o; btn.setAttribute("aria-expanded", o); if (o) host.querySelector(".dd-search").focus(); };
+  const open = (o) => {
+    panel.hidden = !o; btn.setAttribute("aria-expanded", o);
+    if (!o) return;
+    // keep the list inside the screen: shift it left if it would run off the right edge
+    panel.style.left = "0px";
+    const r0 = panel.getBoundingClientRect(), over = r0.right - (document.documentElement.clientWidth - 12);
+    if (over > 0) panel.style.left = `${-Math.min(over, r0.left - 12)}px`;
+    host.querySelector(".dd-search").focus({ preventScroll: true });
+    // and bring the whole list on screen if it opens below the bottom edge
+    requestAnimationFrame(() => { const r = panel.getBoundingClientRect(); if (r.bottom > window.innerHeight - 8) window.scrollBy({ top: r.bottom - window.innerHeight + 16, behavior: "smooth" }); });
+  };
   btn.addEventListener("click", () => open(panel.hidden));
   document.addEventListener("pointerdown", (e) => { if (!host.contains(e.target)) open(false); });
   host.addEventListener("keydown", (e) => { if (e.key === "Escape") { open(false); btn.focus(); } });

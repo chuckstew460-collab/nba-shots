@@ -639,3 +639,13 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 400; letter-spacing
 .insight-tip { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
 table.tbl tbody tr.clicky { cursor: pointer; }
 table.tbl tbody tr.clicky:hover td { background: var(--surface-3); }
+
+/* team dropdown: keep the filter bar (and its open dropdown) above the tiles and charts below it,
+   and show all 30 teams at once in two columns */
+.filters { position: relative; z-index: 40; }
+.dd-panel { width: min(470px, calc(100vw - 32px)); max-height: min(72vh, 560px); }
+.dd-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 4px; }
+.dd-opt { padding: 4px 8px; font-size: 13.5px; }
+@media (max-width: 520px) { .dd-list { grid-template-columns: 1fr; } }
+.dd-list { grid-template-rows: repeat(15, auto); grid-auto-flow: column; }   /* alphabetical down each column */
+@media (max-width: 520px) { .dd-list { grid-template-rows: none; grid-auto-flow: row; } }
