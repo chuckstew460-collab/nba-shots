@@ -463,3 +463,130 @@ table.tbl tfoot tr.league td { color: var(--text-2); font-weight: 600; }
 
 .filter.muted { opacity: 0.4; pointer-events: none; }
 .filter.muted .flabel::after { content: " (not used in this view)"; text-transform: none; letter-spacing: 0; }
+
+/* =====================================================================================
+   THEME: retro cartoon basketball in outer space
+   Deep-space purples, a twinkling starfield (js/common.js), neon accents, and chunky
+   90s cartoon type: Bungee for big titles, Lilita One for headings, Inter for reading.
+   Chart colors were re-validated (contrast + colorblind checks) on --surface below.
+   ===================================================================================== */
+:root {
+  --bg: #0a0618;
+  --bg-2: #110b26;
+  --surface: #171332;
+  --surface-2: #211b45;
+  --surface-3: #2d2559;
+  --line: #2a2450;
+  --axis: #443c75;
+  --border: rgba(167, 139, 250, 0.18);
+  --text: #f6f3ff;
+  --text-2: #cdc6ea;
+  --muted: #958dbd;
+  --accent: #ff7a1a;
+  --accent-2: #ffc15e;
+  --accent-ink: #1d0b00;
+  --neon: #3ee6d8;
+  --pink: #ff4fa3;
+  --violet: #8b5cf6;
+  --gold: #ffd23f;
+  --font-display: "Bungee", "Lilita One", system-ui, sans-serif;
+  --font-head: "Lilita One", "Bungee", system-ui, sans-serif;
+}
+body {
+  background:
+    radial-gradient(1100px 700px at 85% -10%, rgba(139, 92, 246, 0.28), transparent 60%),
+    radial-gradient(900px 700px at -10% 35%, rgba(62, 230, 216, 0.08), transparent 60%),
+    radial-gradient(800px 600px at 50% 110%, rgba(255, 79, 163, 0.10), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+#starfield { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+.hero::before { display: none; }
+h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 400; letter-spacing: 0.01em; }
+.section h2 { text-shadow: 0 3px 0 rgba(42, 15, 77, 0.9); }
+
+/* big cartoon titles: gold-to-orange-to-pink fill, dark outline, a little tilt */
+.hero h1, .dash-head h1, .methods h2 {
+  font-family: var(--font-display); font-weight: 400; text-transform: uppercase; line-height: 1.04;
+  background: linear-gradient(180deg, #fff6b0 0%, #ffd23f 32%, #ff7a1a 68%, #ff4fa3 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-text-stroke: 1.5px #2a0f4d;
+  filter: drop-shadow(0 5px 0 #2a0f4d) drop-shadow(0 0 22px rgba(255, 122, 26, 0.35));
+  transform: skew(-5deg); transform-origin: left bottom;
+}
+.hero h1 { font-size: clamp(34px, 6.2vw, 74px); max-width: calc(100% - 210px); }
+.hero h1 em {
+  font-style: normal;
+  background: linear-gradient(180deg, #d6fffb 0%, #3ee6d8 45%, #8b5cf6 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.dash-head h1 { font-size: clamp(28px, 4.6vw, 52px); }
+.methods h2 { font-size: clamp(24px, 3.6vw, 36px); }
+@media (max-width: 760px) { .hero h1 { max-width: none; } }
+
+.eyebrow, .section-num, .sa-tag, .steps b, .switchbox .flabel, .tl-card .tl-tag {
+  font-family: var(--font-display); font-weight: 400; letter-spacing: 0.12em; color: var(--neon);
+}
+.section-num { font-size: 13px; }
+.brand-name {
+  font-family: var(--font-display); font-weight: 400; letter-spacing: 0.04em; font-size: 19px;
+  background: linear-gradient(180deg, #fff6b0, #ffd23f 40%, #ff7a1a); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.brand-name span { color: transparent; background: linear-gradient(180deg, #d6fffb, #3ee6d8 50%, #8b5cf6); -webkit-background-clip: text; background-clip: text; }
+.nav { background: rgba(10, 6, 24, 0.82); }
+.nav-links a { font-family: var(--font-head); font-weight: 400; letter-spacing: 0.06em; }
+.nav-links a[aria-current="page"] { background: linear-gradient(180deg, #ffb35c, #ff7a1a 55%, #ff4fa3); box-shadow: 0 3px 0 #6b1d45; color: #1d0b00; }
+
+/* cards glow faintly, like panels on a spaceship console */
+.card, .tile, .timeline, .shootaround, .stage, .steps li, .switchbox, .tl-card, .tl-stat, .stage-stats .s {
+  border-color: var(--border);
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.06), 0 18px 40px -24px rgba(0, 0, 0, 0.8);
+}
+.tile-value, .tl-stat .v, .stage-stats .v, .sa-count span { font-family: var(--font-head); font-weight: 400; letter-spacing: 0.01em; }
+.tile-value small { font-family: var(--font-body); }
+.card-title { font-family: var(--font-head); font-weight: 400; font-size: 17px; letter-spacing: 0.01em; }
+.stage-name, .tl-card h3, .film-cta, .sa-dist { font-family: var(--font-head); font-weight: 400; }
+
+/* 90s arcade buttons */
+.btn.primary { background: linear-gradient(180deg, #ffb35c, #ff7a1a 55%, #ff4fa3); border-color: #ff7a1a; box-shadow: 0 4px 0 #6b1d45; color: #1d0b00; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.primary:active { transform: translateY(2px); box-shadow: 0 2px 0 #6b1d45; }
+.seg button[aria-pressed="true"] { background: linear-gradient(180deg, #ffb35c, #ff7a1a 60%, #ff4fa3); color: #1d0b00; }
+.play-btn, .film-play { background: linear-gradient(180deg, #ffb35c, #ff7a1a 55%, #ff4fa3); box-shadow: 0 6px 0 #6b1d45, 0 10px 30px rgba(255, 79, 163, 0.35); }
+.toc a:hover { border-color: var(--neon); }
+.callout { border-left-color: var(--neon); background: linear-gradient(90deg, rgba(62, 230, 216, 0.08), transparent); }
+.tooltip { background: rgba(23, 19, 50, 0.97); border-color: var(--surface-3); }
+.methods { background: rgba(17, 11, 38, 0.85); }
+.methods h3 { color: var(--gold); font-family: var(--font-head); font-weight: 400; }
+.footer { background: rgba(10, 6, 24, 0.7); }
+.disclaimer { width: 100%; color: var(--muted); font-size: 12px; }
+
+/* ---------------------------------------------------------------- NBA emblem (report hero) */
+.hero .wrap { position: relative; }
+.emblem { position: absolute; right: clamp(16px, 4vw, 40px); top: -24px; width: 190px; z-index: 2; user-select: none; -webkit-user-select: none; outline: none; }
+.emblem svg { display: block; width: 100%; height: auto; overflow: visible; cursor: grab; touch-action: none; filter: drop-shadow(0 12px 24px rgba(255, 122, 26, 0.35)); }
+.emblem svg:active { cursor: grabbing; }
+.emblem:focus-visible { outline: 2px solid var(--neon); outline-offset: 6px; border-radius: 50%; }
+.emblem .bubble {
+  position: absolute; right: 0; top: calc(100% + 18px); width: 260px; background: var(--surface-2); border: 1px solid var(--neon); border-radius: 12px;
+  padding: 10px 12px; font-size: 13px; color: var(--text-2); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5); opacity: 0; transform: translateY(-6px);
+  transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 5;
+}
+.emblem .bubble b { color: var(--text); }
+.emblem.show .bubble { opacity: 1; transform: none; }
+.emblem-hint { text-align: center; font-size: 11px; color: var(--muted); margin-top: 2px; }
+@media (max-width: 760px) {
+  .emblem { position: relative; right: auto; top: auto; width: 128px; margin: 0 0 18px; }
+  .emblem .bubble { left: 0; right: auto; }
+}
+
+/* ---------------------------------------------------------------- then vs. now wipe */
+.wipe { position: relative; max-width: 760px; margin: 6px auto 0; outline: none; }
+.wipe svg { display: block; width: 100%; height: auto; touch-action: none; cursor: ew-resize; border-radius: 12px; }
+.wipe:focus-visible { box-shadow: 0 0 0 2px var(--neon); border-radius: 12px; }
+.wipe-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 760px; margin: 12px auto 4px; }
+.wipe-stats .side { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+.wipe-stats .side h4 { font-size: 20px; margin: 0 0 4px; }
+.wipe-stats .row { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-2); }
+.wipe-stats .row b { color: var(--text); font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .wipe-stats { grid-template-columns: 1fr; } }

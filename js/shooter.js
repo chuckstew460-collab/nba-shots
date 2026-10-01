@@ -155,17 +155,34 @@ const Hoops = (() => {
         <linearGradient id="${uid}-floor" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="#3a2a1c"/><stop offset="100%" stop-color="#1c140e"/>
         </linearGradient>
+        <linearGradient id="${uid}-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1d1045"/><stop offset="100%" stop-color="#0c0820"/>
+        </linearGradient>
+        <radialGradient id="${uid}-planet" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#b9a4ff"/><stop offset="60%" stop-color="#6d4bd8"/><stop offset="100%" stop-color="#2c1a6b"/>
+        </radialGradient>
         <radialGradient id="${uid}-glow" cx="80%" cy="0%" r="90%">
-          <stop offset="0%" stop-color="rgba(255,122,26,0.16)"/><stop offset="100%" stop-color="rgba(255,122,26,0)"/>
+          <stop offset="0%" stop-color="rgba(255,79,163,0.18)"/><stop offset="100%" stop-color="rgba(255,79,163,0)"/>
         </radialGradient>`;
+      // the court floats in space: sky, stars, a ringed planet
+      el("rect", { x: 0, y: 0, width: W, height: floorY, fill: `url(#${uid}-sky)` });
       el("rect", { x: 0, y: 0, width: W, height: H, fill: `url(#${uid}-glow)` });
+      let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      for (let i = 0; i < Math.round((W * floorY) / 1400); i++) {
+        el("circle", { cx: rnd() * W, cy: rnd() * floorY * 0.95, r: rnd() < 0.1 ? 1.4 : 0.6 + rnd() * 0.5, fill: "#fff", opacity: (0.35 + rnd() * 0.6).toFixed(2) });
+      }
+      const pr = 2.2 * k, px0 = W * 0.16, py0 = floorY * 0.24;
+      el("ellipse", { cx: px0, cy: py0, rx: pr * 1.9, ry: pr * 0.45, fill: "none", stroke: "#3ee6d8", "stroke-width": Math.max(1.5, 0.12 * k), opacity: 0.55, transform: `rotate(-14 ${px0} ${py0})` });
+      el("circle", { cx: px0, cy: py0, r: pr, fill: `url(#${uid}-planet)` });
+      el("path", { d: `M${px0 - pr * 1.9},${py0} A${pr * 1.9} ${pr * 0.45} 0 0 0 ${px0 + pr * 1.9},${py0}`, fill: "none", stroke: "#3ee6d8",
+        "stroke-width": Math.max(1.5, 0.12 * k), opacity: 0.8, transform: `rotate(-14 ${px0} ${py0})` });
       el("rect", { x: 0, y: floorY, width: W, height: H - floorY, fill: `url(#${uid}-floor)` });
       for (let x = (rimX % (2.2 * k)) - 2.2 * k; x < W; x += 2.2 * k) el("line", { x1: x, x2: x - 0.8 * k, y1: floorY, y2: H, stroke: "rgba(255,255,255,0.05)" });
       el("line", { x1: 0, x2: W, y1: floorY, y2: floorY, stroke: "rgba(255,255,255,0.18)", "stroke-width": 1.5 });
       const xb = rimX + 5.25 * k, x3 = rimX - THREE * k;
       el("path", { d: `M${xb - 2},${floorY} L${xb + 2},${floorY} L${xb + 2 - 0.6 * k},${H} L${xb - 2 - 0.6 * k},${H} Z`, fill: "rgba(255,255,255,0.55)" });
       el("path", { d: `M${x3 - 2.5},${floorY} L${x3 + 2.5},${floorY} L${x3 + 2.5 - 0.6 * k},${H} L${x3 - 2.5 - 0.6 * k},${H} Z`, fill: "#ff7a1a" });
-      const lab = el("text", { x: x3 + 8, y: floorY + 1.25 * k, fill: "#ffb067", "font-size": Math.max(10, 0.62 * k), "font-family": "Oswald, sans-serif", "letter-spacing": "0.08em" });
+      const lab = el("text", { x: x3 + 8, y: floorY + 1.25 * k, fill: "#ffb067", "font-size": Math.max(10, 0.62 * k), "font-family": "'Lilita One', sans-serif", "letter-spacing": "0.08em" });
       lab.textContent = "3-POINT LINE · 23′9″";
       const xs = rimX + 8 * k, xbb = rimX + 1.25 * k;
       el("rect", { x: xs - 1.1 * k, y: yOf(2.6), width: 2.2 * k, height: 2.6 * k, rx: 0.3 * k, fill: "#2a3040" });
@@ -203,7 +220,7 @@ const Hoops = (() => {
       fig.armFar = el("polyline", st(0.27 * k * s * b, SKIN_BACK), g);
       fig.shortB = el("line", st(0.56 * k * s * b, P.jersey), g);
       fig.jersey = el("path", { fill: P.jersey, stroke: P.trim, "stroke-width": Math.max(1.5, 0.08 * k), "stroke-linejoin": "round" }, g);
-      fig.num = el("text", { "text-anchor": "middle", "dominant-baseline": "central", fill: P.trim, "font-family": "Oswald, sans-serif", "font-weight": 600, "font-size": Math.max(7, 0.62 * k * s) }, g);
+      fig.num = el("text", { "text-anchor": "middle", "dominant-baseline": "central", fill: P.trim, "font-family": "'Lilita One', sans-serif", "font-weight": 600, "font-size": Math.max(7, 0.62 * k * s) }, g);
       fig.num.setAttribute("fill", P.numColor || P.trim);
       fig.num.textContent = P.number;
       fig.legF = el("polyline", st(0.38 * k * s * b, SKIN), g);
@@ -358,7 +375,7 @@ const Hoops = (() => {
       ], { duration: 650, easing: "ease-out" });
       if (B.dunk) shake.animate([{ transform: "translateY(0) rotate(0deg)" }, { transform: `translateY(${0.25 * k}px) rotate(4deg)`, offset: 0.2 },
         { transform: "translateY(-2px) rotate(-2deg)", offset: 0.5 }, { transform: "translateY(0) rotate(0deg)" }], { duration: 700, easing: "ease-out" });
-      const t = el("text", { x: rimX, y: yOf(RIM_H) - 0.6 * k, "text-anchor": "middle", fill: "#ffb067", "font-size": Math.max(14, 1.1 * k), "font-weight": 700, "font-family": "Oswald, sans-serif" }, layer.fx);
+      const t = el("text", { x: rimX, y: yOf(RIM_H) - 0.6 * k, "text-anchor": "middle", fill: "#ffb067", "font-size": Math.max(14, 1.1 * k), "font-weight": 700, "font-family": "'Lilita One', sans-serif" }, layer.fx);
       t.textContent = B.dunk ? "SLAM! +2" : `+${B.points}`;
       t.animate([{ transform: "translateY(0)", opacity: 1 }, { transform: `translateY(${-1.8 * k}px)`, opacity: 0 }], { duration: 900, easing: "ease-out" }).onfinish = () => t.remove();
       if (o.onScore) o.onScore(B.points, B.dunk ? "dunk" : B.points === 3 ? "three" : "two");

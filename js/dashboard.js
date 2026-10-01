@@ -3,7 +3,7 @@
    -> summary tiles, 4 charts and a table, each compared with the whole league.
    All chart axes start at zero so differences are never exaggerated. */
 
-const SURFACE = "#161a23";
+const SURFACE = THEME.surface;
 const LOCS = ["Home", "Away"];
 const LOC_COLOR = { Home: SERIES[0], Away: SERIES[1] };
 const LEAGUE_COLOR = "#e3e6ec", TEAM_GRAY = "#5b6272";
@@ -456,7 +456,7 @@ function drawMix(el, W) {
     .on("pointerleave", (e) => { d3.select(e.currentTarget).attr("stroke", null); tip.hide(); });
   g.append("g").selectAll("text").data(segs.filter((d) => x(d.sh) > 34 && yb.bandwidth() >= 14)).join("text")
     .attr("x", (d) => x(d.x0) + 5).attr("y", (d) => yb(d.r.key) + yb.bandwidth() / 2 + 4).style("font-size", "11px").style("font-weight", 600)
-    .style("fill", "#0b0e14").style("pointer-events", "none").text((d) => Math.round(d.sh * 100) + "%");
+    .style("fill", THEME.ink).style("pointer-events", "none").text((d) => Math.round(d.sh * 100) + "%");
 }
 
 /* ================================================================== chart 4: shot map */
@@ -476,17 +476,17 @@ function drawMap(el, Wc) {
   const cap = d3.quantile(hexes.map((o) => o.share).sort(d3.ascending), 0.9) || 1;
   const W = Math.min(Wc, 620), S = courtScales(W);
   const svg = svgIn(el, W, S.height);
-  svg.append("rect").attr("width", W).attr("height", S.height).attr("fill", "#121620").attr("rx", 10);
+  svg.append("rect").attr("width", W).attr("height", S.height).attr("fill", THEME.court).attr("rx", 10);
   const size = d3.scaleSqrt().domain([0, cap]).range([0, 1.6 * S.k]).clamp(true);
   svg.append("g").selectAll("path").data(hexes).join("path")
     .attr("transform", (o) => `translate(${S.sx(o.x)},${S.sy(o.y)})`).attr("d", (o) => hexPath(size(o.share)))
-    .attr("fill", (o) => ppsColor(o.p / o.n)).attr("stroke", "#121620").attr("stroke-width", 0.5)
+    .attr("fill", (o) => ppsColor(o.p / o.n)).attr("stroke", THEME.court).attr("stroke-width", 0.5)
     .on("pointermove", (e, o) => {
       d3.select(e.currentTarget).attr("stroke", "#fff").attr("stroke-width", 1.5).raise();
       tip.show(e, tipHTML(zoneOf(o.x, o.y), [["Share of selected shots", fmt.pct(o.share, 2)], ["Shots", fmt.int(o.n)], ["Make rate", fmt.pct(o.m / o.n)], ["Points per shot", fmt.pps(o.p / o.n), ppsColor(o.p / o.n)]],
         { sub: `about ${Math.hypot(o.x, o.y - COURT.hoopY).toFixed(0)} ft from the rim`, note: o.n < 25 ? "Few shots here: the color is unreliable" : undefined }));
     })
-    .on("pointerleave", (e) => { d3.select(e.currentTarget).attr("stroke", "#121620").attr("stroke-width", 0.5); tip.hide(); });
+    .on("pointerleave", (e) => { d3.select(e.currentTarget).attr("stroke", THEME.court).attr("stroke-width", 0.5); tip.hide(); });
   drawCourt(svg, S);
 }
 

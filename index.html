@@ -7,9 +7,9 @@
   <meta name="description" content="How 4.4 million NBA shots tell the story of the 3-point revolution and the disappearance of the mid-range jumper, 2003-04 to 2024-25.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lilita+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=202610011729">
+  <link rel="stylesheet" href="css/style.css?v=202610011753">
 </head>
 <body>
 
@@ -25,6 +25,7 @@
 
 <header class="hero">
   <div class="wrap">
+    <div class="emblem" id="emblem" tabindex="0" role="button" aria-label="About this report: NBA only. Press Enter for details; left and right arrows spin it."></div>
     <p class="eyebrow">NBA shot data · 2003-04 to 2024-25</p>
     <h1>The death of the <em>mid-range</em></h1>
     <p class="dek">How 4.4 million shots tell the story of basketball’s 3-point revolution, and why the long two disappeared.</p>
@@ -160,6 +161,22 @@
         5.0% to 10.8%. Shots at the rim (the restricted area) actually fell slightly, from 31.3% to 27.9%. The rest of the slack was picked
         up by short shots in the paint (floaters, runners and hooks), which grew from 14.4% to 20.3%.
       </p>
+      <p class="lede">
+        <strong>See it on the floor:</strong> drag the divider across the court below. The left side shows one season and the right side another
+        (2003-04 and 2024-25 to start, or pick any two). Watch the crowded blue middle of 2003-04 turn into the red ring around the arc.
+      </p>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Then vs. now: drag the divider</span>
+          <span class="chips">
+            <label class="card-sub" for="w-a">Left</label><select class="select" id="w-a" aria-label="Left season"></select>
+            <label class="card-sub" for="w-b">Right</label><select class="select" id="w-b" aria-label="Right season"></select>
+          </span>
+        </div>
+        <div class="legend" id="l-wipe"></div>
+        <div class="wipe" id="c-wipe" tabindex="0" role="slider" aria-label="Divider between the two seasons" aria-valuemin="0" aria-valuemax="100"></div>
+        <div class="wipe-stats" id="wipe-stats"></div>
+      </div>
       <div class="card">
         <div class="card-head"><span class="card-title">Share of all shots by court zone, by season</span><span class="card-sub">Hover anywhere to read every zone for that season</span></div>
         <div class="legend" id="l-zones"></div>
@@ -530,14 +547,15 @@
 <footer class="footer">
   <div class="wrap">
     <span>Deep Range · NBA shot data 2003-04 to 2024-25</span>
+    <span class="disclaimer">Unofficial student project. Not affiliated with or endorsed by the NBA or any of its teams; team names, colors and the embedded videos belong to their owners.</span>
     <span><a href="dashboard.html">Explore the data yourself in the dashboard →</a></span>
   </div>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<script src="js/common.js?v=202610011729"></script>
-<script src="js/shooter.js?v=202610011729"></script>
-<script src="js/report.js?v=202610011729"></script>
-<script src="js/film.js?v=202610011729"></script>
+<script src="js/common.js?v=202610011753"></script>
+<script src="js/shooter.js?v=202610011753"></script>
+<script src="js/report.js?v=202610011753"></script>
+<script src="js/film.js?v=202610011753"></script>
 </body>
 </html>

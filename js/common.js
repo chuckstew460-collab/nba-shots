@@ -2,7 +2,7 @@
    Requires d3 v7 (loaded from cdnjs before this file). */
 
 // cache-busting version for data URLs; scripts/bump_version.py updates it together with the HTML
-const SITE_VERSION = "202610011729";
+const SITE_VERSION = "202610011753";
 const asset = (path) => `${path}?v=${SITE_VERSION}`;
 
 const ZONES = ["Restricted area", "Paint (non-RA)", "Mid-range", "Corner 3", "Above-break 3"];
@@ -18,6 +18,59 @@ const SERIES = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300"
 const MUTED = "#8a91a0";
 const ACCENT = "#ff7a1a";
 const COLD = "#3987e5", MID_GRAY = "#4a5060", HOT = "#e66767";
+// space-theme surfaces (keep in sync with css/style.css); chart colors were validated on THEME.surface
+const THEME = { surface: "#171332", court: "#110d26", ink: "#120b26" };
+
+/* ------------------------------------------------------------------ starfield */
+// Twinkling stars and the odd shooting star behind every page. Still (no animation) when
+// the reader prefers reduced motion; paused while the tab is hidden.
+document.addEventListener("DOMContentLoaded", () => {
+  const c = document.createElement("canvas");
+  c.id = "starfield"; c.setAttribute("aria-hidden", "true");
+  document.body.prepend(c);
+  const ctx = c.getContext("2d"), reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const tints = ["#ffffff", "#ffffff", "#ffffff", "#ffe9b0", "#bfe9ff", "#ffc2e6"];
+  let W = 0, H = 0, stars = [], streak = null, nextStreak = 4000, last = 0;
+  function resize() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = window.innerWidth; H = window.innerHeight;
+    c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    stars = Array.from({ length: Math.round((W * H) / 5200) }, () => ({
+      x: Math.random() * W, y: Math.random() * H, r: Math.random() < 0.07 ? 1.4 + Math.random() : 0.4 + Math.random() * 0.8,
+      a: 0.35 + Math.random() * 0.65, tw: 0.4 + Math.random() * 1.8, ph: Math.random() * 6.28, c: tints[Math.floor(Math.random() * tints.length)],
+    }));
+    draw(performance.now());
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      const a = reduce ? s.a : s.a * (0.55 + 0.45 * Math.sin((t / 1000) * s.tw + s.ph));
+      ctx.globalAlpha = a; ctx.fillStyle = s.c;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
+      if (s.r > 1.4) { ctx.globalAlpha = a * 0.45; ctx.fillRect(s.x - s.r * 3, s.y - 0.3, s.r * 6, 0.6); ctx.fillRect(s.x - 0.3, s.y - s.r * 3, 0.6, s.r * 6); }
+    }
+    if (streak) {
+      const g = ctx.createLinearGradient(streak.x, streak.y, streak.x + 90, streak.y - 40);
+      g.addColorStop(0, "rgba(255,255,255,0.9)"); g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.globalAlpha = 1 - streak.life / 50; ctx.strokeStyle = g; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(streak.x, streak.y); ctx.lineTo(streak.x + 90, streak.y - 40); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function loop(t) {
+    if (!document.hidden && t - last > 33) {          // ~30 fps is plenty for twinkling
+      last = t;
+      if (!streak && t > nextStreak) { streak = { x: W * (0.3 + Math.random() * 0.7), y: H * Math.random() * 0.45, life: 0 }; nextStreak = t + 7000 + Math.random() * 9000; }
+      if (streak) { streak.x -= 14; streak.y += 6; if (++streak.life > 50) streak = null; }
+      draw(t);
+    }
+    requestAnimationFrame(loop);
+  }
+  let rt = 0;
+  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(resize, 150); });
+  resize();
+  if (!reduce) requestAnimationFrame(loop);
+});
 
 /* ------------------------------------------------------------------ formatting */
 const fmt = {

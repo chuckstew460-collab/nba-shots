@@ -1,7 +1,7 @@
 /* Report page (index.html): every chart reads data/processed/report.json,
    which scripts/process_data.py builds from the raw shot files. */
 
-const SURFACE = "#161a23";
+const SURFACE = THEME.surface;
 
 /* ------------------------------------------------------------------ small helpers */
 function svgIn(el, w, h) {
@@ -54,6 +54,7 @@ d3.json(asset("data/processed/report.json")).then((R) => {
   tiles(R, L, seasons, zget);
   volume(L);
   timeline(R, L, seasons, zget);
+  thenVsNow(R, seasons, zget);
   zonesArea(seasons, zget);
   distanceCurve(R.distance);
   distHist(R.dist_hist, seasons, byS);
@@ -202,7 +203,7 @@ function timeline(R, L, seasons, zget) {
   responsive(courtEl, (W) => {
     const S = courtScales(W);
     const svg = svgIn(courtEl, W, S.height);
-    svg.append("rect").attr("width", W).attr("height", S.height).attr("fill", "#121620").attr("rx", 10);
+    svg.append("rect").attr("width", W).attr("height", S.height).attr("fill", THEME.court).attr("rx", 10);
     const hexG = svg.append("g");
     drawCourt(svg, S);
     const rMax = 1.1 * S.k;
@@ -220,7 +221,7 @@ function timeline(R, L, seasons, zget) {
     const enter = sel.enter().append("path")
       .attr("transform", (d) => `translate(${S.sx(d[0])},${S.sy(d[1])})`)
       .attr("d", hexPath(0))
-      .attr("stroke", "#121620").attr("stroke-width", 0.5)
+      .attr("stroke", THEME.court).attr("stroke-width", 0.5)
       .on("pointermove", (e, d) => {
         const dist = Math.hypot(d[0], d[1] - COURT.hoopY);
         tip.show(e, tipHTML(zoneOf(d[0], d[1]), [
@@ -231,7 +232,7 @@ function timeline(R, L, seasons, zget) {
         ], { sub: `${seasons[idx]} · about ${dist.toFixed(0)} ft from the rim` }));
         d3.select(e.currentTarget).attr("stroke", "#fff").attr("stroke-width", 1.5).raise();
       })
-      .on("pointerleave", (e) => { tip.hide(); d3.select(e.currentTarget).attr("stroke", "#121620").attr("stroke-width", 0.5); });
+      .on("pointerleave", (e) => { tip.hide(); d3.select(e.currentTarget).attr("stroke", THEME.court).attr("stroke-width", 0.5); });
     const all = enter.merge(sel);
     (t ? all.transition(t) : all)
       .attr("d", (d) => hexPath(size(d[2])))
@@ -374,6 +375,186 @@ function timeline(R, L, seasons, zget) {
     ["3-point share", (d) => d.three_share, fmt.pct], ["Mid-range share", (d) => zget(d.season, "Mid-range").share, fmt.pct],
     ["Points per shot", (d) => d.pps, fmt.pps], ["eFG%", (d) => d.efg, fmt.pct],
   ], { caption: "Show the league numbers for every season" });
+}
+
+/* ================================================================== hero: NBA emblem */
+// An original emblem (not the league's logo): a basketball planet marked "NBA" with an orbiting
+// ring of text. Drag to spin it, click (or Enter) for a note that the report covers only the NBA.
+function nbaEmblem() {
+  const host = document.getElementById("emblem");
+  if (!host) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ringText = "★ NBA ONLY ★ REGULAR SEASON ★ 2003-04 TO 2024-25 ★ 4.4 MILLION SHOTS ";
+  host.innerHTML = `
+    <svg viewBox="-100 -100 200 200" role="img" aria-label="NBA shot data emblem: a basketball planet with an orbiting ring">
+      <defs>
+        <radialGradient id="em-ball" cx="35%" cy="30%" r="80%">
+          <stop offset="0%" stop-color="#ffc07a"/><stop offset="50%" stop-color="#ff7a1a"/><stop offset="100%" stop-color="#a5400c"/>
+        </radialGradient>
+        <linearGradient id="em-ring" x1="0" x2="1"><stop offset="0%" stop-color="#3ee6d8"/><stop offset="50%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#ff4fa3"/></linearGradient>
+        <clipPath id="em-clip"><circle r="56"/></clipPath>
+        <path id="em-orbit" d="M0,-86 a86,86 0 1,1 0,172 a86,86 0 1,1 0,-172"/>
+      </defs>
+      <g id="em-text"><text font-family="'Lilita One', sans-serif" font-size="12.5" letter-spacing="1.2" fill="#3ee6d8"><textPath href="#em-orbit">${ringText}</textPath></text></g>
+      <g transform="rotate(-16)"><path d="M-92,0 A92,24 0 0,1 92,0" fill="none" stroke="url(#em-ring)" stroke-width="7" opacity="0.85"/></g>
+      <g id="em-planet">
+        <circle r="56" fill="url(#em-ball)" stroke="#2a0f4d" stroke-width="3"/>
+        <g clip-path="url(#em-clip)"><g id="em-seams" fill="none" stroke="#3b1404" stroke-width="2.6" opacity="0.85">
+          <path d="M-56,0 H56"/><path d="M0,-56 V56"/><path d="M-38,-44 C-14,-16 -14,16 -38,44"/><path d="M38,-44 C14,-16 14,16 38,44"/>
+        </g></g>
+        <text y="-22" text-anchor="middle" font-family="'Lilita One', sans-serif" font-size="10.5" fill="#fff6b0" stroke="#2a0f4d" stroke-width="3" paint-order="stroke" letter-spacing="1.5">SHOT DATA</text>
+        <text y="12" text-anchor="middle" font-family="Bungee, sans-serif" font-size="33" fill="#fff" stroke="#2a0f4d" stroke-width="5" paint-order="stroke" letter-spacing="1">NBA</text>
+      </g>
+      <g transform="rotate(-16)"><path d="M-92,0 A92,24 0 0,0 92,0" fill="none" stroke="url(#em-ring)" stroke-width="7"/></g>
+      <g id="em-moon"><circle r="7" fill="#d6fffb" stroke="#2a0f4d" stroke-width="2"/></g>
+    </svg>
+    <div class="emblem-hint">drag to spin · click me</div>
+    <div class="bubble" role="status"><b>Only the NBA.</b> This report covers every NBA regular-season field-goal attempt from 2003-04 through 2024-25. No WNBA, college, G League or playoff games.</div>`;
+  const svg = host.querySelector("svg"), seams = host.querySelector("#em-seams"), text = host.querySelector("#em-text"),
+    moon = host.querySelector("#em-moon"), planet = host.querySelector("#em-planet");
+  let spin = 0, ring = 0, orbit = 0, speed = reduce ? 0 : 1, boost = 0, drag = null, moved = 0;
+  let front = null;
+  function frame() {
+    const v = speed + boost;
+    spin += v * 0.6; ring -= v * 0.25; orbit += v * 0.012; boost *= 0.95;
+    seams.setAttribute("transform", `rotate(${spin.toFixed(1)})`);
+    text.setAttribute("transform", `rotate(${ring.toFixed(1)})`);
+    // the little moon rides the tilted ring, passing behind the planet on the far side
+    const a = orbit, x = 92 * Math.cos(a), y = 24 * Math.sin(a), r = (-16 * Math.PI) / 180;
+    moon.setAttribute("transform", `translate(${(x * Math.cos(r) - y * Math.sin(r)).toFixed(1)},${(x * Math.sin(r) + y * Math.cos(r)).toFixed(1)})`);
+    const f = Math.sin(a) >= 0;
+    if (f !== front) { front = f; if (f) svg.appendChild(moon); else svg.insertBefore(moon, planet); }
+    if (!reduce || boost > 0.05 || drag) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  const kick = () => { if (reduce) requestAnimationFrame(frame); };
+  const toggle = () => {
+    host.classList.toggle("show");
+    planet.animate([{ transform: "translateY(0)" }, { transform: "translateY(-14px)" }, { transform: "translateY(0)" }, { transform: "translateY(-5px)" }, { transform: "translateY(0)" }],
+      { duration: 650, easing: "ease-out" });
+    boost = 12; kick();
+  };
+  svg.addEventListener("pointerenter", () => { if (!reduce) speed = 2.5; });
+  svg.addEventListener("pointerleave", () => { if (!reduce) speed = 1; });
+  svg.addEventListener("pointerdown", (e) => { drag = e.clientX; moved = 0; svg.setPointerCapture(e.pointerId); kick(); });
+  svg.addEventListener("pointermove", (e) => {
+    if (drag == null) return;
+    const dx = e.clientX - drag; drag = e.clientX; moved += Math.abs(dx);
+    spin += dx * 2; ring += dx; orbit += dx * 0.02; boost = Math.max(boost, Math.abs(dx) * 0.4);
+  });
+  svg.addEventListener("pointerup", () => { if (moved < 5) toggle(); drag = null; });
+  svg.addEventListener("pointercancel", () => { drag = null; });
+  host.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+    else if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); boost = e.key === "ArrowRight" ? 10 : -10; kick(); }
+    else if (e.key === "Escape") host.classList.remove("show");
+  });
+  document.addEventListener("pointerdown", (e) => { if (!host.contains(e.target)) host.classList.remove("show"); });
+}
+nbaEmblem();
+
+/* ================================================================== 3b. then vs. now wipe */
+// Two seasons on one court: drag the divider (or use the arrow keys) to reveal one or the other.
+function thenVsNow(R, seasons, zget) {
+  const el = document.getElementById("c-wipe"), selA = document.getElementById("w-a"), selB = document.getElementById("w-b");
+  const byS = new Map(R.league.map((d) => [d.season, d]));
+  const opts = seasons.map((s) => `<option value="${s}">${s}</option>`).join("");
+  selA.innerHTML = opts; selB.innerHTML = opts;
+  selA.value = seasons[0]; selB.value = seasons[seasons.length - 1];
+  const allShares = Object.values(R.hex).flat().map((d) => d[2]).sort(d3.ascending);
+  const cap = d3.quantile(allShares, 0.9);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let frac = 0.5, width = 0, S = null, setDivider = () => {};
+  document.getElementById("l-wipe").innerHTML = `${ppsLegend()}<span class="legend-item">Bigger hexagon = more of that season’s shots</span>`;
+
+  function stats() {
+    const side = (s) => {
+      const d = byS.get(s);
+      return `<div class="side"><h4>${s}</h4>
+        <div class="row"><span>3-point share</span><b>${fmt.pct(d.three_share)}</b></div>
+        <div class="row"><span>Mid-range share</span><b>${fmt.pct(zget(s, "Mid-range").share)}</b></div>
+        <div class="row"><span>Shots at the rim</span><b>${fmt.pct(zget(s, "Restricted area").share)}</b></div>
+        <div class="row"><span>Points per shot</span><b>${fmt.pps(d.pps)}</b></div></div>`;
+    };
+    document.getElementById("wipe-stats").innerHTML = side(selA.value) + side(selB.value);
+  }
+
+  function draw() {
+    if (!width) return;
+    const W = Math.min(width, 760);
+    S = courtScales(W);
+    const host = d3.select(el); host.selectAll("*").remove();
+    const svg = host.append("svg").attr("viewBox", `0 0 ${W} ${S.height}`).attr("width", W).attr("height", S.height);
+    const uid = "wipe" + Math.random().toString(36).slice(2, 7);
+    const defs = svg.append("defs");
+    const clipA = defs.append("clipPath").attr("id", uid + "a").append("rect").attr("y", 0).attr("height", S.height).attr("x", 0);
+    const clipB = defs.append("clipPath").attr("id", uid + "b").append("rect").attr("y", 0).attr("height", S.height);
+    svg.append("rect").attr("width", W).attr("height", S.height).attr("fill", THEME.court).attr("rx", 12);
+    const size = d3.scaleSqrt().domain([0, cap]).range([0, 1.1 * S.k]).clamp(true);
+    const layer = (season, clipId) => {
+      const g = svg.append("g").attr("clip-path", `url(#${clipId})`);
+      g.selectAll("path").data(R.hex[season]).join("path")
+        .attr("transform", (d) => `translate(${S.sx(d[0])},${S.sy(d[1])})`).attr("d", (d) => hexPath(size(d[2])))
+        .attr("fill", (d) => ppsColor(d[5] / d[3])).attr("stroke", THEME.court).attr("stroke-width", 0.5)
+        .on("pointermove", (e, d) => {
+          if (dragging) return;
+          tip.show(e, tipHTML(zoneOf(d[0], d[1]), [["Share of that season’s shots", fmt.pct(d[2], 2)], ["Make rate", fmt.pct(d[4] / d[3])],
+            ["Points per shot", fmt.pps(d[5] / d[3]), ppsColor(d[5] / d[3])]], { sub: season }));
+        })
+        .on("pointerleave", () => tip.hide());
+    };
+    layer(selA.value, uid + "a");
+    layer(selB.value, uid + "b");
+    drawCourt(svg, S);
+    const tagStyle = (t) => t.attr("font-family", "'Lilita One', sans-serif").attr("font-size", Math.max(16, S.k * 1.1)).attr("fill", "#fff")
+      .attr("stroke", "#2a0f4d").attr("stroke-width", 4).attr("paint-order", "stroke");
+    const tagA = svg.append("text").attr("x", 12).attr("y", 26).call(tagStyle).text(selA.value);
+    const tagB = svg.append("text").attr("x", W - 12).attr("y", 26).attr("text-anchor", "end").call(tagStyle).text(selB.value);
+    const div = svg.append("g").style("pointer-events", "none");
+    div.append("line").attr("y1", 0).attr("y2", S.height).attr("stroke", "#fff").attr("stroke-width", 3);
+    div.append("circle").attr("cy", S.height / 2).attr("r", 18).attr("fill", ACCENT).attr("stroke", "#fff").attr("stroke-width", 3);
+    div.append("path").attr("d", `M-6,${S.height / 2 - 6} L-12,${S.height / 2} L-6,${S.height / 2 + 6} M6,${S.height / 2 - 6} L12,${S.height / 2} L6,${S.height / 2 + 6}`)
+      .attr("fill", "none").attr("stroke", "#1d0b00").attr("stroke-width", 3).attr("stroke-linecap", "round").attr("stroke-linejoin", "round");
+    setDivider = (f) => {
+      frac = Math.max(0, Math.min(1, f));
+      const x = frac * W;
+      clipA.attr("width", x); clipB.attr("x", x).attr("width", W - x);
+      div.attr("transform", `translate(${x},0)`);
+      tagA.attr("opacity", frac > 0.12 ? 1 : 0); tagB.attr("opacity", frac < 0.88 ? 1 : 0);
+      el.setAttribute("aria-valuenow", Math.round(frac * 100));
+    };
+    setDivider(frac);
+    let dragging = false;
+    const toFrac = (e) => { const r = svg.node().getBoundingClientRect(); return (e.clientX - r.left) / r.width; };
+    svg.on("pointerdown", (e) => { dragging = true; svg.node().setPointerCapture(e.pointerId); tip.hide(); setDivider(toFrac(e)); })
+      .on("pointermove.drag", (e) => { if (dragging) setDivider(toFrac(e)); })
+      .on("pointerup pointercancel", () => { dragging = false; });
+  }
+
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); setDivider(frac + (e.key === "ArrowRight" ? 0.05 : -0.05)); }
+    else if (e.key === "Home") { e.preventDefault(); setDivider(0); }
+    else if (e.key === "End") { e.preventDefault(); setDivider(1); }
+  });
+  [selA, selB].forEach((s) => s.addEventListener("change", () => { stats(); draw(); }));
+  responsive(el, (w) => { width = w; draw(); });
+  stats();
+
+  // first time it scrolls into view, sweep the divider across once to show what it does
+  if (!reduce && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver((en) => {
+      if (!en[0].isIntersecting) return;
+      io.disconnect();
+      const t0 = performance.now(), path = [0.5, 0.85, 0.15, 0.5], dur = 2600;
+      (function step(t) {
+        const u = Math.min(1, (t - t0) / dur), seg = Math.min(path.length - 2, Math.floor(u * (path.length - 1)));
+        const local = u * (path.length - 1) - seg, e = local < 0.5 ? 2 * local * local : 1 - Math.pow(-2 * local + 2, 2) / 2;
+        setDivider(path[seg] + (path[seg + 1] - path[seg]) * e);
+        if (u < 1) requestAnimationFrame(step);
+      })(t0);
+    }, { threshold: 0.6 });
+    io.observe(el);
+  }
 }
 
 /* ================================================================== 3. zone shares */
@@ -816,8 +997,8 @@ function jerseySVG(word, number, [jersey, trim, ink]) {
   const fit = Math.min(68, word.length * 8.2);
   return `<svg viewBox="0 0 100 112">
     <path d="M28 4 C34 17 66 17 72 4 L84 8 C82 22 86 34 94 40 L94 108 L6 108 L6 40 C14 34 18 22 16 8 Z" fill="${jersey}" stroke="${trim}" stroke-width="3.5" stroke-linejoin="round"/>
-    <text x="50" y="45" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="13" fill="${ink}" textLength="${fit}" lengthAdjust="spacingAndGlyphs">${word}</text>
-    <text x="50" y="90" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="42" fill="${ink}" stroke="${trim}" stroke-width="1.2" paint-order="stroke">${number}</text>
+    <text x="50" y="45" text-anchor="middle" font-family="'Lilita One', sans-serif" font-weight="600" font-size="13" fill="${ink}" textLength="${fit}" lengthAdjust="spacingAndGlyphs">${word}</text>
+    <text x="50" y="90" text-anchor="middle" font-family="'Lilita One', sans-serif" font-weight="600" font-size="42" fill="${ink}" stroke="${trim}" stroke-width="1.2" paint-order="stroke">${number}</text>
   </svg>`;
 }
 
