@@ -201,16 +201,33 @@ def build_report(d: pd.DataFrame, raw: pd.DataFrame, log: dict) -> dict:
     r3 = raw[raw.SHOT_TYPE.eq("3PT Field Goal")]
     p3 = (r3.groupby(["SEASON_2", "PLAYER_ID"])
             .agg(PLAYER_NAME=("PLAYER_NAME", "last"), fg3a=("SHOT_MADE", "size"), fg3m=("SHOT_MADE", "sum"))
-            .reset_index().rename(columns={"SEASON_2": "season"}).drop(columns="PLAYER_ID"))
+            .reset_index().rename(columns={"SEASON_2": "season"}))
     p3["fg3m"] = p3.fg3m.astype(int)
     p3["fg3_pct"] = p3.fg3m / p3.fg3a
     lead = p3.sort_values("fg3m", ascending=False).drop_duplicates("season").sort_values("season")
-    R["three_leaders"] = recs(lead)
     vol = p3.groupby("season").apply(lambda x: pd.Series({
         "p300": int((x.fg3a >= 300).sum()), "p500": int((x.fg3a >= 500).sum())}), include_groups=False).reset_index()
     R["volume_shooters"] = recs(vol)
     top_seasons = p3.sort_values("fg3m", ascending=False).head(15)
-    R["top_3pm_seasons"] = recs(top_seasons)
+    R["top_3pm_seasons"] = recs(top_seasons.drop(columns="PLAYER_ID"))
+    R["three_leaders"] = recs(lead.drop(columns="PLAYER_ID"))
+
+    # "pick a shooter": how each of those seasons' threes were taken (heaves excluded)
+    t3 = d[d.is3 == 1]
+    shooters = []
+    for _, r in top_seasons.iterrows():
+        x = t3[(t3.season == r.season) & (t3.PLAYER_ID == r.PLAYER_ID)]
+        mix = x.action.value_counts(normalize=True)
+        main = {"Standard jumper": mix.get("Other jumper", 0.0), "Pull-up": mix.get("Pull-up jumper", 0.0),
+                "Step-back": mix.get("Step-back jumper", 0.0)}
+        main["Other"] = max(0.0, 1 - sum(main.values()))
+        shooters.append({
+            "season": r.season, "name": r.PLAYER_NAME, "team": x.TEAM_NAME.mode()[0],
+            "fg3m": int(r.fg3m), "fg3a": int(r.fg3a), "fg3_pct": round(float(r.fg3_pct), 4),
+            "avg_dist": round(float(x.SHOT_DISTANCE.mean()), 1),
+            "mix": {k: round(float(v), 4) for k, v in main.items()},
+        })
+    R["shooters"] = shooters
 
     # action families by season
     a = rates(agg(d.groupby(["season", "action"]))).reset_index()
