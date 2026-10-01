@@ -33,6 +33,19 @@
       <span>Data: NBA Stats API, via the <a href="https://github.com/DomSamangy/NBA_Shots_04_25">NBA_Shots_04_25</a> collection</span>
       <span>Regular seasons only</span>
     </div>
+
+    <div class="shootaround" id="shootaround">
+      <div class="sa-panel">
+        <p class="sa-tag">Your turn · shoot from 25 feet</p>
+        <div class="sa-count"><span id="sa-made">0</span><small>threes made</small></div>
+        <p class="sa-note" id="sa-note">Click anywhere on the court to let it fly.</p>
+        <button class="btn primary" id="sa-shoot" type="button">
+          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M1.5 8h13M8 1.5v13" stroke="currentColor" stroke-width="1.2"/></svg>
+          Shoot
+        </button>
+      </div>
+      <div class="sa-court" id="sa-court" role="button" tabindex="0" aria-label="Basketball court. Click, or press Enter, to shoot a three-pointer."></div>
+    </div>
     <p class="summary">
       This report covers every regular-season NBA field-goal attempt from 2003-04 through 2024-25:
       <strong>4,441,371 shots</strong> by 2,265 players on all 30 franchises across 26,457 games, each one tagged with where on the floor
@@ -291,18 +304,38 @@
         the record: 401 makes in this data (402 officially) on 45.4% shooting. James Harden’s 2018-19 holds the attempts record at
         <strong>1,028</strong>.
       </p>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-head"><span class="card-title">Players attempting 300+ threes in a season</span><span class="card-sub">Hover for that season’s leader</span></div>
-          <div class="legend" id="l-vol"></div>
-          <div class="chart" id="c-vol"></div>
-          <div id="t-vol"></div>
-        </div>
-        <div class="card">
-          <div class="card-head"><span class="card-title">Most made threes in a season, 2003-04 to 2024-25</span><span class="card-sub">Top 15 · hover for attempts and accuracy</span></div>
+      <p class="lede">
+        <strong>Pick a shooter below.</strong> Hover over or tap any of the 15 best seasons to watch that player take a three from his
+        average 3-point distance that season. Each figure shoots the way the data says he did: <strong>52.8%</strong> of James Harden’s
+        2018-19 three-point attempts were <strong>step-backs</strong>, <strong>46.2%</strong> of Anthony Edwards’ 2024-25 attempts were
+        <strong>pull-ups</strong>, and 69.8% of Curry’s 2015-16 attempts were standard jump shots. The first shot is each player’s most common
+        type, and every “shoot again” draws from his real mix.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Players attempting 300+ threes in a season</span><span class="card-sub">Hover for that season’s leader</span></div>
+        <div class="legend" id="l-vol"></div>
+        <div class="chart" id="c-vol"></div>
+        <div id="t-vol"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Pick a shooter: the 15 most made threes in a season, 2003-04 to 2024-25</span><span class="card-sub">Hover or tap a season to watch the shot</span></div>
+        <div class="shooter-grid">
           <div class="chart" id="c-top"></div>
-          <div id="t-top"></div>
+          <div class="stage">
+            <div class="stage-head">
+              <div><div class="stage-name" id="st-name"></div><div class="stage-sub" id="st-sub"></div></div>
+              <button class="btn" id="st-again" type="button">Shoot again</button>
+            </div>
+            <div class="stage-court" id="st-court" role="button" tabindex="0" aria-label="Shoot again"></div>
+            <div class="stage-stats" id="st-stats"></div>
+            <div class="stage-mix">
+              <div class="stage-shot" id="st-shot" aria-live="polite"></div>
+              <div class="mixbar" id="st-mix"></div>
+              <div class="legend" id="st-mix-legend"></div>
+            </div>
+          </div>
         </div>
+        <div id="t-top"></div>
       </div>
     </div>
   </section>
@@ -442,6 +475,10 @@
       <dt>Game situations (section 11)</dt><dd>“Final 2:00” = the 4th quarter or overtime with 2:00 or less on the period clock;
         “2:00–5:00 left” = the same periods with 2:01–5:00 left; “Rest of game” = everything else.</dd>
       <dt>Home / away</dt><dd>a shot is a home shot when the shooter’s team abbreviation matches the game’s home team.</dd>
+      <dt>Shooter mix and distance (section 9)</dt><dd>for each of the 15 top seasons, the share of the player’s 3-point attempts in each
+        shot type (“standard jumper” is the NBA’s plain “Jump Shot” description and its close variants; pull-up and step-back as labeled),
+        and the mean recorded distance of those attempts, backcourt heaves excluded. The animated figures are drawings, not footage:
+        each one stands at that average distance and uses a shooting motion for the chosen shot type.</dd>
       <dt>Volume shooters (section 9)</dt><dd>players with at least 300 (or 500) 3-point attempts in a season, counting all shots including heaves.</dd>
     </dl>
 
@@ -463,6 +500,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="js/common.js"></script>
+<script src="js/shooter.js"></script>
 <script src="js/report.js"></script>
 </body>
 </html>
