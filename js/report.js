@@ -42,7 +42,7 @@ function spreadLabels(items, minGap, lo, hi) {
   return items;
 }
 
-d3.json("data/processed/report.json").then((R) => {
+d3.json(asset("data/processed/report.json")).then((R) => {
   const seasons = R.seasons;
   const L = R.league;
   const byS = new Map(L.map((d) => [d.season, d]));

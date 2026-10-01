@@ -39,12 +39,14 @@ const DEFAULTS = () => ({ from: 0, to: D.seasons.length - 1, teams: new Set(D.te
 // convert only the numeric columns (d3.autoType would turn seasons like "2003-04" into dates)
 const nums = (...cols) => (d) => { for (const c of cols) d[c] = +d[c]; return d; };
 Promise.all([
-  d3.csv("data/processed/cube.csv", nums("fga", "fgm", "fg3a", "fg3m", "pts")),
-  d3.csv("data/processed/games.csv", nums("games")),
-  d3.csv("data/processed/teams.csv"),
-  d3.csv("data/processed/bins.csv", nums("s", "t", "z", "l", "h", "n", "m", "p")),
-  d3.json("data/processed/bins_key.json"),
+  d3.csv(asset("data/processed/cube.csv"), nums("fga", "fgm", "fg3a", "fg3m", "pts")),
+  d3.csv(asset("data/processed/games.csv"), nums("games")),
+  d3.csv(asset("data/processed/teams.csv")),
+  d3.csv(asset("data/processed/bins.csv"), nums("s", "t", "z", "l", "h", "n", "m", "p")),
+  d3.json(asset("data/processed/bins_key.json")),
 ]).then(([cube, games, teams, bins, key]) => {
+  // guard against a stale cached file from before an update
+  if (!cube.columns.includes("loc") || !bins.columns.includes("h") || !key.hexes) throw new Error("stale data files");
   const seasons = Array.from(new Set(cube.map((d) => d.season))).sort();
   const teamName = new Map(teams.map((d) => [d.team, d.name]));
   const teamCodes = teams.map((d) => d.team).sort((a, b) => d3.ascending(teamName.get(a), teamName.get(b)));
@@ -69,7 +71,9 @@ Promise.all([
 }).catch((err) => {
   console.error(err);
   document.getElementById("loading").innerHTML =
-    `<p class="callout">Could not load the data files. If you opened this page straight from disk, run a local server (for example <code>python -m http.server</code>) and open it through that.</p>`;
+    `<p class="callout">The dashboard could not load its data. The site may have just been updated: please refresh the page
+     (Ctrl+Shift+R, or Cmd+Shift+R on a Mac). If you opened this file straight from disk, run a local server instead
+     (for example <code>python -m http.server</code>).</p>`;
 });
 
 /* ================================================================== compute */

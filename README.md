@@ -42,6 +42,7 @@ shot, 2PT or 3PT, and made or missed.
 | `js/film.js` | The section 9 film room: plays about 10 seconds each from three official NBA / Golden State Warriors YouTube videos back to back (the YouTube player streams them; nothing is copied into the repo) |
 | `favicon.svg` | The basketball icon shown in the browser tab |
 | `scripts/download_data.py` | Downloads the 22 raw season files from the source repository into `data/raw/` |
+| `scripts/bump_version.py` | Stamps a new `?v=` version on every CSS, JS and data URL so browsers never mix cached old files with new ones after an update; run it after changing the site |
 | `scripts/process_data.py` | Cleans the raw shots and writes every file in `data/processed/` (see "Cleaning" below) |
 | `requirements.txt` | Python packages needed to run the scripts |
 | `data/raw/NBA_<year>_Shots.csv.zip` | The 22 untouched raw files, one per season (`2004` = the 2003-04 season … `2025` = 2024-25) |
@@ -69,6 +70,7 @@ Every rate is defined in the report's **About the data** section: FG% = makes ÷
 pip install -r requirements.txt
 python scripts/download_data.py     # skips files already in data/raw/
 python scripts/process_data.py      # writes data/processed/*
+python scripts/bump_version.py      # after any change, so browsers fetch fresh copies
 python -m http.server               # then open http://localhost:8000
 ```
 

@@ -1,6 +1,10 @@
 /* Shared helpers for the report (index.html) and the dashboard (dashboard.html).
    Requires d3 v7 (loaded from cdnjs before this file). */
 
+// cache-busting version for data URLs; scripts/bump_version.py updates it together with the HTML
+const SITE_VERSION = "202610011700";
+const asset = (path) => `${path}?v=${SITE_VERSION}`;
+
 const ZONES = ["Restricted area", "Paint (non-RA)", "Mid-range", "Corner 3", "Above-break 3"];
 const ZONE_COLOR = {
   "Restricted area": "#c98500",
