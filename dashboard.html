@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Shot Lab Dashboard · NBA Shot Data 2003–2025</title>
+  <meta name="description" content="Filter 4.4 million NBA shots by season, team, zone, shot type, quarter and home/away, and watch the numbers change.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Site">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="brand-ball"></span><span class="brand-name">Deep <span>Range</span></span></a>
+    <div class="nav-links">
+      <a href="index.html">Report</a>
+      <a href="dashboard.html" aria-current="page">Dashboard</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap dash-head">
+  <div>
+    <p class="eyebrow">Shot Lab · 2003-04 to 2024-25</p>
+    <h1>Explore every shot</h1>
+    <p>Filter 4.4 million regular-season shots, switch what is measured and how it is split, and every number, chart and table below updates in your browser.</p>
+  </div>
+  <button class="btn primary" id="reset" type="button">
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.5M3 2.5V5h2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Reset all filters
+  </button>
+</div>
+
+<div id="loading" class="wrap loading"><div class="spinner"></div><div>Loading shot data…</div></div>
+
+<div id="app" hidden>
+  <div class="filters" role="region" aria-label="Filters">
+    <div class="wrap">
+      <div class="filter-row">
+        <div class="filter">
+          <span class="flabel" id="lbl-season">Seasons</span>
+          <div class="season-range" role="group" aria-labelledby="lbl-season">
+            <select class="select" id="f-from" aria-label="First season"></select>
+            <span>to</span>
+            <select class="select" id="f-to" aria-label="Last season"></select>
+          </div>
+        </div>
+        <div class="filter"><span class="flabel">Team</span><div class="dd" id="f-team"></div></div>
+        <div class="filter"><span class="flabel">Court zone</span><div class="dd" id="f-zone"></div></div>
+        <div class="filter"><span class="flabel">Shot type</span><div class="dd" id="f-action"></div></div>
+        <div class="filter"><span class="flabel" id="lbl-period">Quarter</span><div class="seg toggle" id="f-period" role="group" aria-labelledby="lbl-period"></div></div>
+        <div class="filter"><span class="flabel" id="lbl-loc">Home / away</span><div class="seg toggle" id="f-loc" role="group" aria-labelledby="lbl-loc"></div></div>
+      </div>
+      <div class="status" id="status" aria-live="polite" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <div class="tiles dash-tiles" id="kpis" aria-label="Summary numbers"></div>
+
+    <div class="switches">
+      <div class="switch-group"><span class="flabel" id="lbl-measure">Measure</span><div class="seg" id="sw-measure" role="group" aria-labelledby="lbl-measure"></div></div>
+      <div class="switch-group"><span class="flabel" id="lbl-by">Break down by</span><div class="seg" id="sw-by" role="group" aria-labelledby="lbl-by"></div></div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="card wide">
+        <div class="card-head"><span class="card-title" id="t1"></span><span class="card-sub">Hover the chart to read every line for a season</span></div>
+        <div class="legend" id="lg1"></div>
+        <div class="chart" id="ch-trend"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title" id="t2"></span><span class="card-sub">All selected seasons combined</span></div>
+        <div class="chart" id="ch-bars"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title">Where the shots came from</span><span class="card-sub" id="map-sub"></span></div>
+        <div class="legend" id="lg-map"></div>
+        <div class="chart" id="ch-map"></div>
+        <p class="card-sub" style="margin:8px 0 4px">The map follows the season, team and zone filters. Quarter, home/away and shot type are not stored by court location.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title" id="t3"></span><span class="card-sub">Brighter = higher · blank = fewer than 25 shots</span></div>
+        <div class="legend" id="lg3"></div>
+        <div class="chart" id="ch-heat" style="overflow-x:auto"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title" id="t4"></span><span class="card-sub">Share of each group’s shots by court zone</span></div>
+        <div class="legend" id="lg4"></div>
+        <div class="chart" id="ch-mix"></div>
+      </div>
+
+      <div class="card wide">
+        <div class="card-head">
+          <span class="card-title" id="t5"></span>
+          <button class="btn" id="download" type="button">
+            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M2.5 13.5h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Download CSV
+          </button>
+        </div>
+        <p class="card-sub" style="margin:0 0 6px">Click a column header to sort. The bottom row totals everything that matches the filters.</p>
+        <div class="table-scroll" style="max-height:520px"><table class="tbl sortable" id="tbl"></table></div>
+      </div>
+    </div>
+
+    <p class="card-sub" style="margin:28px 0 0">
+      Data: NBA Stats API regular-season shot logs, via <a href="https://github.com/DomSamangy/NBA_Shots_04_25">NBA_Shots_04_25</a>.
+      The dashboard loads <code>data/processed/cube.csv</code> (shots summed by season × team × zone × quarter × home/away × shot type),
+      <code>games.csv</code> and <code>bins.csv</code>, and does every calculation in the browser. How each measure is computed is explained in the
+      <a href="index.html#data">About the data</a> section of the report.
+    </p>
+  </main>
+</div>
+
+<footer class="footer" style="margin-top:48px">
+  <div class="wrap">
+    <span>Deep Range · NBA shot data 2003-04 to 2024-25</span>
+    <span><a href="index.html">← Back to the report</a></span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -276,6 +276,7 @@ select.select:focus-visible, button:focus-visible, input:focus-visible { outline
   background: rgba(11, 14, 20, 0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border-block: 1px solid var(--border); padding-block: 12px; margin-top: 16px;
 }
+@media (max-width: 760px) { .filters { position: static; } }
 .filter-row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
 .filter { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .filter > label, .filter > .flabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
@@ -316,7 +317,8 @@ select.select:focus-visible, button:focus-visible, input:focus-visible { outline
 .switch-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .switch-group .flabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
 
-.dash-tiles { margin-top: 20px; }
+.dash-tiles { margin-top: 20px; grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)); gap: 10px; }
+.dash-tiles .tile { padding: 14px 14px 12px; }
 .dash-tiles .tile-value { font-size: 30px; }
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); gap: 18px; }
 .dash-grid .card { margin-top: 18px; }

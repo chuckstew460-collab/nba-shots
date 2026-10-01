@@ -276,7 +276,7 @@ function timeline(R, L, seasons, zget) {
     const every = w < 480 ? 4 : w < 760 ? 2 : 1;
     g.selectAll("text.tick").data(seasons).join("text").attr("class", "axis-label")
       .attr("x", (s) => x(s)).attr("y", 52).attr("text-anchor", "middle")
-      .text((s, i) => (i % every === 0 || i === seasons.length - 1 ? shortSeason(s) : ""));
+      .text((s, i) => ((seasons.length - 1 - i) % every === 0 ? shortSeason(s) : ""));
     g.selectAll("circle.tick").data(seasons).join("circle")
       .attr("cx", (s) => x(s)).attr("cy", yLine).attr("r", (s) => (MILESTONES[s] ? 5 : 2.5))
       .attr("fill", (s) => (MILESTONES[s] ? ACCENT : "#8a91a0")).attr("stroke", SURFACE).attr("stroke-width", (s) => (MILESTONES[s] ? 2 : 0));
