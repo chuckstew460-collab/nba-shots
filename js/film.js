@@ -3,15 +3,17 @@
    YouTube player streams each video and stops after ~10 seconds, then the next one
    starts. The YouTube script only loads when the reader presses play. */
 
-// one clip per player in the top-15 chart, in its order; ~8 seconds each from official uploads
+// one clip per player in the top-15 chart, in its order; ~8 seconds each from official uploads.
+// Start times sit on each video's "most replayed" peak (the big shot) or, for the 3-point
+// contest, inside Hield's final-round chapter.
 const REEL = [
   { id: "cHy7leb1LYM", start: 3, end: 11, who: "Stephen Curry", what: "From all 402 of his record threes, 2015-16", channel: "Golden State Warriors" },
-  { id: "X9GddRiKdXg", start: 1, end: 9, who: "James Harden", what: "His signature step-back three", channel: "NBA" },
+  { id: "X9GddRiKdXg", start: 97, end: 105, who: "James Harden", what: "A step-back three from the NBA’s top-5 list", channel: "NBA" },
   { id: "qgKfJ5AVMaU", start: 1, end: 9, who: "Anthony Edwards", what: "Career-high 53 points and 10 threes vs. Detroit, Jan. 4, 2025", channel: "NBA" },
   { id: "9mey7rreVhY", start: 1, end: 9, who: "Malik Beasley", what: "Career-high 36 points and 9 threes vs. Philadelphia, Feb. 7, 2025", channel: "NBA" },
-  { id: "VoqR1_UJjbk", start: 1, end: 9, who: "Klay Thompson", what: "14 threes vs. Chicago, Oct. 29, 2018", channel: "NBA" },
-  { id: "DN2OwG5qE3c", start: 1, end: 9, who: "Paul George", what: "47 points and 8 threes vs. Portland, Feb. 11, 2019", channel: "NBA" },
-  { id: "HHpdDCbUlLY", start: 1, end: 9, who: "Buddy Hield", what: "His first months with the Pacers, 2021-22", channel: "Indiana Pacers" },
+  { id: "VoqR1_UJjbk", start: 131, end: 139, who: "Klay Thompson", what: "His record night: 14 threes vs. Chicago, Oct. 29, 2018", channel: "NBA" },
+  { id: "XMg5aIdw6PY", start: 536, end: 546, who: "Paul George", what: "Game-winning three vs. Houston, Apr. 9, 2019", channel: "NBA" },
+  { id: "fVq7w22Af2Q", start: 401, end: 409, who: "Buddy Hield", what: "Final round of the 2023 3-Point Contest, for the Pacers", channel: "NBA" },
 ];
 
 (function filmRoom() {
@@ -52,7 +54,7 @@ const REEL = [
     const c = REEL[idx], t = player.getCurrentTime();
     // right after a switch the player still reports the previous video; wait for the new one
     if (!live) {
-      const vid = player.getVideoData ? player.getVideoData().video_id : c.id;
+      const vd = player.getVideoData ? player.getVideoData() : null, vid = vd && vd.video_id;
       if (vid === c.id && player.getPlayerState() === YT.PlayerState.PLAYING && Math.abs(t - c.start) < 3) live = true;
       else return;
     }
