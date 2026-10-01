@@ -2,8 +2,11 @@
 
 Inputs : data/raw/NBA_<year>_Shots.csv.zip  (one zip per season, 2004-2025)
 Outputs: data/processed/report.json   numbers + chart data for index.html
-         data/processed/cube.csv      aggregated shots for dashboard.html
-         data/processed/bins.csv      hex-binned shot locations for the dashboard map
+         data/processed/cube.csv      shots summed by season x team x zone x home/away (dashboard)
+         data/processed/games.csv     games per team, season and home/away (dashboard per-game)
+         data/processed/teams.csv     team code -> name (dashboard)
+         data/processed/bins.csv      hex-binned shot locations by the same four filters, as codes (dashboard map)
+         data/processed/bins_key.json codes -> seasons, teams, zones, home/away, hexagon centres
 
 Run:  python scripts/process_data.py
 """
@@ -281,12 +284,12 @@ def build_report(d: pd.DataFrame, raw: pd.DataFrame, log: dict) -> dict:
 
 # ---------------------------------------------------------------- dashboard
 def build_dashboard(d: pd.DataFrame):
-    # one row per season x team x zone x period x home/away x shot family
-    dims = ["season", "code", "zone", "period", "loc", "action"]
+    # one row per season x team x court zone x home/away (the four dashboard filters)
+    dims = ["season", "code", "zone", "loc"]
     d = d.assign(fg3m=d.made * d.is3)
     c = (d.groupby(dims)
            .agg(fga=("made", "size"), fgm=("made", "sum"), fg3a=("is3", "sum"),
-                fg3m=("fg3m", "sum"), pts=("pts", "sum"), dist_sum=("dist", "sum"))
+                fg3m=("fg3m", "sum"), pts=("pts", "sum"))
            .reset_index().rename(columns={"code": "team"}))
     c.to_csv(OUT / "cube.csv", index=False)
 
@@ -298,14 +301,26 @@ def build_dashboard(d: pd.DataFrame):
     teams = d.drop_duplicates("code").set_index("code")["team"].sort_index()
     teams.reset_index().rename(columns={"code": "team", "team": "name"}).to_csv(OUT / "teams.csv", index=False)
 
-    # shot locations binned into hexagons (radius 1.6 ft) for the dashboard shot map
+    # shot locations binned into hexagons (radius 1.6 ft) for the dashboard shot map,
+    # split by the same four filters so the map follows every one of them
     m = d[d.LOC_Y <= 35]
     hx, hy = hexbin(m.LOC_X.values, m.LOC_Y.values, 1.6)
     m = m.assign(hx=np.round(hx, 1), hy=np.round(hy, 1))
-    b = (m.groupby(["season", "code", "zone", "hx", "hy"])
-           .agg(n=("made", "size"), fgm=("made", "sum"), pts=("pts", "sum")).reset_index()
-           .rename(columns={"code": "team"}))
-    b.to_csv(OUT / "bins.csv", index=False)
+    b = (m.groupby(dims + ["hx", "hy"])
+           .agg(n=("made", "size"), fgm=("made", "sum"), pts=("pts", "sum")).reset_index())
+    # store as small integer codes; bins_key.json translates them back
+    key = {"seasons": sorted(b.season.unique()), "teams": sorted(b.code.unique()), "zones": [z for z in dict.fromkeys(ZONE_LABEL.values())],
+           "locs": ["Home", "Away"]}
+    hexes = b[["hx", "hy"]].drop_duplicates().sort_values(["hy", "hx"]).reset_index(drop=True)
+    key["hexes"] = hexes.values.tolist()
+    hid = {(x, y): i for i, (x, y) in enumerate(key["hexes"])}
+    coded = pd.DataFrame({
+        "s": b.season.map({v: i for i, v in enumerate(key["seasons"])}), "t": b.code.map({v: i for i, v in enumerate(key["teams"])}),
+        "z": b.zone.map({v: i for i, v in enumerate(key["zones"])}), "l": b["loc"].map({v: i for i, v in enumerate(key["locs"])}),
+        "h": [hid[(x, y)] for x, y in zip(b.hx, b.hy)], "n": b.n, "m": b.fgm, "p": b.pts})
+    coded.to_csv(OUT / "bins.csv", index=False)
+    with open(OUT / "bins_key.json", "w") as f:
+        json.dump(key, f, separators=(",", ":"))
     return len(c), len(b)
 
 

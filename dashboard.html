@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Shot Lab Dashboard · NBA Shot Data 2003–2025</title>
-  <meta name="description" content="Filter 4.4 million NBA shots by season, team, zone, shot type, quarter and home/away, and watch the numbers change.">
+  <meta name="description" content="Filter 4.4 million NBA shots by season, team, court zone and home/away, and compare them with the league.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
@@ -27,17 +27,29 @@
   <div>
     <p class="eyebrow">Shot Lab · 2003-04 to 2024-25</p>
     <h1>Explore every shot</h1>
-    <p>Filter 4.4 million regular-season shots, switch what is measured and how it is split, and every number, chart and table below updates in your browser.</p>
+    <p>Pick the seasons, teams and part of the court you care about. Every number, chart and table below recalculates from 4.4 million
+      regular-season shots, right in your browser, and compares your selection with the whole league.</p>
   </div>
   <button class="btn primary" id="reset" type="button">
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.5M3 2.5V5h2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Reset all filters
+    Reset everything
   </button>
+</div>
+
+<div class="wrap">
+  <ol class="steps" aria-label="How to use this dashboard">
+    <li><b>1 · Filter</b><span>Choose seasons, teams, court zones and home or away games.</span></li>
+    <li><b>2 · Measure</b><span>Choose what the charts show: volume, accuracy, value or 3-point share.</span></li>
+    <li><b>3 · Split</b><span>Choose how the charts are divided: by court zone, by team, or home vs. away.</span></li>
+  </ol>
 </div>
 
 <div id="loading" class="wrap loading"><div class="spinner"></div><div>Loading shot data…</div></div>
 
 <div id="app" hidden>
+  <div class="minibar" id="minibar" hidden>
+    <div class="wrap"><span id="mini-text"></span><button class="btn" id="mini-edit" type="button">Change filters ↑</button></div>
+  </div>
   <div class="filters" role="region" aria-label="Filters">
     <div class="wrap">
       <div class="filter-row">
@@ -49,51 +61,48 @@
             <select class="select" id="f-to" aria-label="Last season"></select>
           </div>
         </div>
-        <div class="filter"><span class="flabel">Team</span><div class="dd" id="f-team"></div></div>
-        <div class="filter"><span class="flabel">Court zone</span><div class="dd" id="f-zone"></div></div>
-        <div class="filter"><span class="flabel">Shot type</span><div class="dd" id="f-action"></div></div>
-        <div class="filter"><span class="flabel" id="lbl-period">Quarter</span><div class="seg toggle" id="f-period" role="group" aria-labelledby="lbl-period"></div></div>
-        <div class="filter"><span class="flabel" id="lbl-loc">Home / away</span><div class="seg toggle" id="f-loc" role="group" aria-labelledby="lbl-loc"></div></div>
+        <div class="filter"><span class="flabel">Teams</span><div class="dd" id="f-team"></div></div>
+        <div class="filter"><span class="flabel" id="lbl-zone">Court zones</span><div class="seg toggle" id="f-zone" role="group" aria-labelledby="lbl-zone"></div></div>
+        <div class="filter"><span class="flabel" id="lbl-loc">Games</span><div class="seg toggle" id="f-loc" role="group" aria-labelledby="lbl-loc"></div></div>
       </div>
-      <div class="status" id="status" aria-live="polite" style="margin-top:8px"></div>
+      <div class="status" id="status" aria-live="polite"></div>
     </div>
   </div>
 
   <main class="wrap">
-    <div class="tiles dash-tiles" id="kpis" aria-label="Summary numbers"></div>
+    <div class="tiles dash-tiles four" id="kpis" aria-label="Summary numbers"></div>
 
-    <div class="switches">
-      <div class="switch-group"><span class="flabel" id="lbl-measure">Measure</span><div class="seg" id="sw-measure" role="group" aria-labelledby="lbl-measure"></div></div>
-      <div class="switch-group"><span class="flabel" id="lbl-by">Break down by</span><div class="seg" id="sw-by" role="group" aria-labelledby="lbl-by"></div></div>
+    <div class="switchbox">
+      <div class="switch-group"><span class="flabel" id="lbl-measure">2 · Measure</span><div class="seg" id="sw-measure" role="group" aria-labelledby="lbl-measure"></div></div>
+      <p class="explain" id="measure-explain"></p>
+      <div class="switch-group"><span class="flabel" id="lbl-by">3 · Split by</span><div class="seg" id="sw-by" role="group" aria-labelledby="lbl-by"></div></div>
+      <p class="explain" id="by-explain"></p>
     </div>
 
     <div class="dash-grid">
       <div class="card wide">
-        <div class="card-head"><span class="card-title" id="t1"></span><span class="card-sub">Hover the chart to read every line for a season</span></div>
+        <div class="card-head"><span class="card-title" id="t1"></span></div>
+        <p class="howto" id="h1"></p>
         <div class="legend" id="lg1"></div>
         <div class="chart" id="ch-trend"></div>
       </div>
 
       <div class="card">
-        <div class="card-head"><span class="card-title" id="t2"></span><span class="card-sub">All selected seasons combined</span></div>
+        <div class="card-head"><span class="card-title" id="t2"></span></div>
+        <p class="howto" id="h2"></p>
         <div class="chart" id="ch-bars"></div>
       </div>
 
       <div class="card">
-        <div class="card-head"><span class="card-title">Where the shots came from</span><span class="card-sub" id="map-sub"></span></div>
+        <div class="card-head"><span class="card-title">Where the shots come from on the floor</span></div>
+        <p class="howto">Each hexagon is a patch of court. <b>Bigger</b> = more of the selected shots came from there. <b>Color</b> = points per shot from that spot (blue = poor, red = good). Hover for details.</p>
         <div class="legend" id="lg-map"></div>
         <div class="chart" id="ch-map"></div>
-        <p class="card-sub" style="margin:8px 0 4px">The map follows the season, team and zone filters. Quarter, home/away and shot type are not stored by court location.</p>
       </div>
 
-      <div class="card">
-        <div class="card-head"><span class="card-title" id="t3"></span><span class="card-sub">Brighter = higher · blank = fewer than 25 shots</span></div>
-        <div class="legend" id="lg3"></div>
-        <div class="chart" id="ch-heat" style="overflow-x:auto"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-head"><span class="card-title" id="t4"></span><span class="card-sub">Share of each group’s shots by court zone</span></div>
+      <div class="card wide">
+        <div class="card-head"><span class="card-title" id="t4"></span></div>
+        <p class="howto" id="h4"></p>
         <div class="legend" id="lg4"></div>
         <div class="chart" id="ch-mix"></div>
       </div>
@@ -106,16 +115,16 @@
             Download CSV
           </button>
         </div>
-        <p class="card-sub" style="margin:0 0 6px">Click a column header to sort. The bottom row totals everything that matches the filters.</p>
+        <p class="howto">The exact numbers behind the charts. Click a column header to sort. The last two rows are your whole selection and the whole league for the same seasons, zones and games.</p>
         <div class="table-scroll" style="max-height:520px"><table class="tbl sortable" id="tbl"></table></div>
       </div>
     </div>
 
     <p class="card-sub" style="margin:28px 0 0">
       Data: NBA Stats API regular-season shot logs, via <a href="https://github.com/DomSamangy/NBA_Shots_04_25">NBA_Shots_04_25</a>.
-      The dashboard loads <code>data/processed/cube.csv</code> (shots summed by season × team × zone × quarter × home/away × shot type),
-      <code>games.csv</code> and <code>bins.csv</code>, and does every calculation in the browser. How each measure is computed is explained in the
-      <a href="index.html#data">About the data</a> section of the report.
+      The dashboard loads <code>data/processed/cube.csv</code> (shots summed by season × team × court zone × home/away),
+      <code>games.csv</code>, <code>teams.csv</code>, and <code>bins.csv</code> + <code>bins_key.json</code> (shot locations), and does every
+      calculation in the browser. Free throws are not in the data. Definitions are in the report’s <a href="index.html#data">About the data</a> section.
     </p>
   </main>
 </div>
