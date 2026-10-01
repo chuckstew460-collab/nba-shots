@@ -4,11 +4,11 @@
    starts. The YouTube script only loads when the reader presses play. */
 
 // one clip per player in the top-15 chart, in its order; ~8 seconds each from official uploads.
-// Start times sit on each video's "most replayed" peak (the big shot) or, for the 3-point
-// contest, inside Hield's final-round chapter.
+// Start times were chosen by scanning the videos frame by frame (Harden), from each video's
+// "most replayed" peak (Klay, George), or inside a chapter (Hield's 3-point contest final).
 const REEL = [
   { id: "cHy7leb1LYM", start: 3, end: 11, who: "Stephen Curry", what: "From all 402 of his record threes, 2015-16", channel: "Golden State Warriors" },
-  { id: "X9GddRiKdXg", start: 97, end: 105, who: "James Harden", what: "A step-back three from the NBA’s top-5 list", channel: "NBA" },
+  { id: "X9GddRiKdXg", start: 88, end: 97, who: "James Harden", what: "Step-back three: the shot, the swish and the roar", channel: "NBA" },
   { id: "qgKfJ5AVMaU", start: 1, end: 9, who: "Anthony Edwards", what: "Career-high 53 points and 10 threes vs. Detroit, Jan. 4, 2025", channel: "NBA" },
   { id: "9mey7rreVhY", start: 1, end: 9, who: "Malik Beasley", what: "Career-high 36 points and 9 threes vs. Philadelphia, Feb. 7, 2025", channel: "NBA" },
   { id: "VoqR1_UJjbk", start: 131, end: 139, who: "Klay Thompson", what: "His record night: 14 threes vs. Chicago, Oct. 29, 2018", channel: "NBA" },

@@ -790,8 +790,8 @@ const TEAM_WORD = {
 };
 // listed height (in), build, the number he wore in these seasons, and motion cues from his well-known form
 const PROFILES = {
-  "Stephen Curry": { heightIn: 74, build: 0.92, number: "30", motion: { tempo: 1.3, early: 1, jump: 0.9, dip: 0.8, setHigh: -4, turnAway: 0.5 },
-    cue: "Quick, one-motion release on the way up, and on some shots he turns away before the ball drops." },
+  "Stephen Curry": { heightIn: 74, build: 0.92, number: "30", motion: { tempo: 1.3, early: 1, jump: 0.9, dip: 0.8, setHigh: -4, turnAway: 1 },
+    cue: "Quick, one-motion release on the way up, then his famous turn-away: he spins around before the ball even drops." },
   "James Harden": { heightIn: 77, build: 1.15, number: "13", hair: "tall", beard: true, lefty: true, motion: { tempo: 0.95, dip: 1.1, step: 2.4, fade: 0.5, jump: 0.85 },
     cue: "Left-handed, with a long step back and a fade away from the defender." },
   "Anthony Edwards": { heightIn: 76, build: 1.12, number: "5", motion: { tempo: 1.05, jump: 1.35 },
