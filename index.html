@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The Death of the Mid-Range · NBA Shot Data 2003–2025</title>
+  <meta name="description" content="How 4.4 million NBA shots tell the story of the 3-point revolution and the disappearance of the mid-range jumper, 2003-04 to 2024-25.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Site">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="brand-ball"></span><span class="brand-name">Deep <span>Range</span></span></a>
+    <div class="nav-links">
+      <a href="index.html" aria-current="page">Report</a>
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">NBA shot data · 2003-04 to 2024-25</p>
+    <h1>The death of the <em>mid-range</em></h1>
+    <p class="dek">How 4.4 million shots tell the story of basketball’s 3-point revolution, and why the long two disappeared.</p>
+    <div class="byline">
+      <span>By <strong id="author">[Your Name]</strong></span>
+      <span>Data: NBA Stats API, via the <a href="https://github.com/DomSamangy/NBA_Shots_04_25">NBA_Shots_04_25</a> collection</span>
+      <span>Regular seasons only</span>
+    </div>
+    <p class="summary">
+      This report covers every regular-season NBA field-goal attempt from 2003-04 through 2024-25:
+      <strong>4,441,371 shots</strong> by 2,265 players on all 30 franchises across 26,457 games, each one tagged with where on the floor
+      it was taken, how far from the basket, and whether it went in. Over those 22 seasons the league rebuilt its shot selection around one
+      piece of arithmetic. A two-pointer from anywhere between 4 and 20 feet is worth about <strong>0.80 points</strong> per attempt; a three from
+      the corner is worth about <strong>1.15</strong>. Teams now take <strong>37.4 threes a game, 2.5 times as many</strong> as in 2003-04, and the
+      mid-range jumper has fallen from <strong>35.7% of all shots to 9.8%</strong>. Three-point accuracy barely moved (35.0% to 36.2%).
+      The gain came from <em>choosing</em> better shots, and offenses now score 1.089 points per shot instead of 0.944.
+    </p>
+
+    <div class="tiles" id="tiles" aria-label="Headline numbers"></div>
+
+    <nav class="toc" aria-label="Sections">
+      <a href="#s1">3-point volume</a><a href="#s2">Timeline</a><a href="#s3">Mid-range</a><a href="#s4">Shot value</a>
+      <a href="#s5">Distance</a><a href="#s6">Zones</a><a href="#s7">Teams</a><a href="#s8">Does it pay?</a>
+      <a href="#s9">Shooters</a><a href="#s10">Shot types</a><a href="#s11">Clutch</a><a href="#s12">Home court</a><a href="#data">About the data</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- 1 ------------------------------------------------------------------>
+  <section class="section" id="s1">
+    <div class="wrap">
+      <p class="section-num">01 · Volume</p>
+      <h2>Teams take 2.5 times as many threes as they did in 2003-04</h2>
+      <p class="lede">
+        In 2003-04 the average team attempted <strong>14.8 threes per game</strong>. By 2024-25 it was <strong>37.4</strong>.
+        The rise was not steady: the two biggest one-year jumps came in 2016-17 (+2.9 per game) and 2018-19 (+3.0). Those were the
+        years Houston’s threes-and-layups offense peaked and Golden State was winning titles. Threes went from
+        <strong>18.6% of all shots to 42.0%</strong>.
+      </p>
+      <p class="lede">
+        Accuracy did not drive this. League 3-point percentage was 35.0% in 2003-04 and 36.2% in 2024-25, and it has never left the range of
+        35.0% to 37.0%. Players did not suddenly get better at making threes. Teams decided threes were the better bet.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">3-point attempts per team per game, by season</span><span class="card-sub">Hover a bar for makes, accuracy and share of shots</span></div>
+        <div class="chart" id="c-volume"></div>
+        <div id="t-volume"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------------>
+  <section class="section" id="s2">
+    <div class="wrap">
+      <p class="section-num">02 · Interactive timeline</p>
+      <h2>In two decades the shot chart moved from the elbows to the 3-point arc</h2>
+      <p class="lede">
+        Each hexagon below is a patch of court. Its <strong>size</strong> shows how often teams shot from there that season, and its
+        <strong>color</strong> shows how many points a shot from there was worth (blue = cold, red = hot). In 2003-04 the floor is covered
+        edge to edge, with heavy traffic along the baseline and elbows inside the arc. By 2024-25 the inside of the arc has emptied out
+        and the shots have moved to the rim and behind the line. Those are the two red bands.
+      </p>
+      <p class="lede">
+        <strong>Drag the slider, click a season, or press play.</strong> The cards explain what was happening in the league that season,
+        and the small chart tracks the 3-point share against the mid-range share. Threes overtook the mid-range for good in 2014-15.
+      </p>
+
+      <div class="timeline" id="timeline">
+        <div class="tl-top">
+          <div class="tl-court">
+            <div class="tl-season-big" id="tl-season"></div>
+            <div id="tl-court"></div>
+            <div class="legend" id="tl-legend"></div>
+          </div>
+          <div class="tl-story">
+            <div class="tl-card" id="tl-card" aria-live="polite"></div>
+            <div class="tl-stats" id="tl-stats"></div>
+            <div class="card" style="margin-top:0">
+              <div class="card-head"><span class="card-title">Share of all shots</span></div>
+              <div class="legend" id="tl-mini-legend"></div>
+              <div class="chart" id="tl-mini"></div>
+            </div>
+          </div>
+        </div>
+        <div class="tl-controls">
+          <button class="play-btn" id="tl-play" aria-label="Play timeline">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path id="tl-play-icon" d="M4 2l12 7-12 7z" fill="currentColor"/></svg>
+          </button>
+          <div class="tl-track" id="tl-track" role="slider" tabindex="0" aria-label="Season" aria-valuemin="0" aria-valuemax="21"></div>
+        </div>
+        <p class="tl-hint">Drag the orange handle · Orange dots mark key moments · Keyboard: <span class="kbd">←</span> <span class="kbd">→</span> to step, <span class="kbd">Space</span> to play</p>
+        <div id="t-timeline"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------------>
+  <section class="section" id="s3">
+    <div class="wrap">
+      <p class="section-num">03 · The mid-range</p>
+      <h2>The mid-range jumper fell from 35.7% of all shots to 9.8%</h2>
+      <p class="lede">
+        A “mid-range” shot here is any 2-pointer outside the paint: the elbow jumper, the baseline 15-footer, the long two just inside the arc.
+        In 2003-04 it was the most common shot in basketball. The average team took <strong>28.5 per game</strong>. By 2024-25 that was
+        down to <strong>8.7</strong>, and the mid-range was the least-used zone on the floor.
+      </p>
+      <p class="lede">
+        Almost all of those shots moved behind the arc. Above-the-break threes went from 13.5% to 31.2% of shots and corner threes from
+        5.0% to 10.8%. Shots at the rim (the restricted area) actually fell slightly, from 31.3% to 27.9%. The rest of the slack was picked
+        up by short shots in the paint (floaters, runners and hooks), which grew from 14.4% to 20.3%.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Share of all shots by court zone, by season</span><span class="card-sub">Hover anywhere to read every zone for that season</span></div>
+        <div class="legend" id="l-zones"></div>
+        <div class="chart" id="c-zones"></div>
+        <div id="t-zones"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------------>
+  <section class="section" id="s4">
+    <div class="wrap">
+      <p class="section-num">04 · The math</p>
+      <h2>Every two from 4 to 20 feet is worth about 0.80 points. A 23-foot three is worth 1.15.</h2>
+      <p class="lede">
+        This chart explains the whole revolution. Pooling all 4.4 million shots, the make rate drops quickly in the first three feet from the rim,
+        then hardly moves. From 4 feet out to 20 feet it stays between <strong>39.4% and 41.1%</strong>, so every one of those shots is
+        worth between <strong>0.79 and 0.82 points</strong>. Moving from 10 feet to 20 feet costs almost nothing in accuracy, and moving
+        closer gains almost nothing.
+      </p>
+      <p class="lede">
+        Then the line jumps. At 22–23 feet, the distance of a corner three, shots go in 39% of the time but count for three points, so
+        each one is worth <strong>1.07–1.15 points</strong>. A 23-footer is worth <strong>46% more</strong> than a 20-footer even though it goes
+        in almost as often. Only shots from 31 feet and deeper fall back below the value of a long two.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Points per shot by distance from the basket (all seasons)</span><span class="card-sub">Hover to read make rate, value and volume at each foot</span></div>
+        <div class="legend" id="l-dist"></div>
+        <div class="chart" id="c-dist"></div>
+        <div id="t-dist"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 ------------------------------------------------------------------>
+  <section class="section" id="s5">
+    <div class="wrap">
+      <p class="section-num">05 · Distance</p>
+      <h2>Shot distance went from a bell to a barbell: 42% of shots now come from 22 feet or deeper</h2>
+      <p class="lede">
+        In 2003-04, <strong>39.7%</strong> of shots came from 8 to 21 feet, a wide hump of jump shots in the middle of the floor. In 2024-25
+        only <strong>17.6%</strong> did. Shots from 22 feet and beyond went from 19.7% to <strong>42.3%</strong>. The distribution now has
+        two peaks, one at the rim and one just behind the arc, with a valley in between. The average shot moved from 11.5 to 13.9 feet.
+      </p>
+      <p class="lede">
+        Shots at the rim (0–3 feet) held roughly steady, 31.4% then and 28.0% now. Older seasons record most of those as “0 ft”
+        and newer ones spread them across 0–2 ft, so compare that band as a whole, not foot by foot. Pick any two seasons to compare.
+      </p>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Share of shots at each distance (feet)</span>
+          <span class="chips">
+            <label class="card-sub" for="h-a">Compare</label>
+            <select class="select" id="h-a" aria-label="First season"></select>
+            <label class="card-sub" for="h-b">with</label>
+            <select class="select" id="h-b" aria-label="Second season"></select>
+          </span>
+        </div>
+        <div class="legend" id="l-hist"></div>
+        <div class="chart" id="c-hist"></div>
+        <div id="t-hist"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 ------------------------------------------------------------------>
+  <section class="section" id="s6">
+    <div class="wrap">
+      <p class="section-num">06 · Zone value</p>
+      <h2>The mid-range never caught up, while finishing at the rim got much better</h2>
+      <p class="lede">
+        Teams didn’t abandon the mid-range on a hunch. In <strong>all 22 seasons</strong>, both 3-point zones were worth at least
+        <strong>0.22 points more per shot</strong> than the mid-range. Mid-range shots peaked at 0.843 points per shot (2022-23), while
+        the worst season for any 3-point zone was 1.021. The mid-range was the lowest-value zone in 15 of the 22 seasons. In the other
+        seven, only short paint shots were worse.
+      </p>
+      <p class="lede">
+        The biggest change was at the rim. Points per shot in the restricted area rose from <strong>1.164 to 1.327</strong>, and the make
+        rate from 58.2% to 66.4%. With shooters spread around the arc, defenders can’t crowd the paint, so the shots that remain at the
+        basket are easier. The corner three stayed the best shot outside the restricted area in every season.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Points per shot by court zone, by season</span><span class="card-sub">Hover to compare all five zones in a season</span></div>
+        <div class="legend" id="l-zpps"></div>
+        <div class="chart" id="c-zpps"></div>
+        <div id="t-zpps"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 ------------------------------------------------------------------>
+  <section class="section" id="s7">
+    <div class="wrap">
+      <p class="section-num">07 · Teams</p>
+      <h2>Houston set the pace, and Boston broke the record with 53.5% of its shots from three</h2>
+      <p class="lede">
+        Each row is a franchise, each column a season, and brighter cells mean a bigger share of shots from three. The leaders tell the history.
+        Mike D’Antoni’s “Seven Seconds or Less” Suns led in 2004-05 and 2005-06. Stan Van Gundy’s Orlando Magic, built around Dwight Howard
+        and four shooters, led five straight years (2007-08 to 2011-12). Then Houston led <strong>seven straight seasons</strong> (2013-14 to
+        2019-20) and in 2017-18 became the first team in this data to take half its shots from three (50.1%).
+      </p>
+      <p class="lede">
+        The record now belongs to the <strong>2024-25 Boston Celtics at 53.5%</strong>. The whole league moved with them. Denver took the
+        smallest share of threes in 2024-25 (35.2%), and that share would have <em>led</em> the league in every season from 2003-04 through 2013-14.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Share of each team’s shots that were 3-pointers</span><span class="card-sub">Teams sorted by their 2024-25 share · outlined cell = league leader that season · hover for details</span></div>
+        <div class="legend" id="l-heat"></div>
+        <div class="chart" id="c-heat"></div>
+        <div id="t-heat"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 ------------------------------------------------------------------>
+  <section class="section" id="s8">
+    <div class="wrap">
+      <p class="section-num">08 · Does it pay?</p>
+      <h2>Teams that shot more threes than their peers scored more per shot</h2>
+      <p class="lede">
+        Comparing every team to the league average in its own season removes the league-wide trend and asks a fairer question: did the
+        teams that leaned harder on threes than everyone else that year score more efficiently? Across all 659 team-seasons,
+        <strong>yes</strong>. The correlation is <strong>0.45</strong>. Each 10 percentage points of extra 3-point share went with about
+        <strong>0.038 more points per shot</strong>, roughly 3.4 points per game at today’s 89 shots a game.
+      </p>
+      <p class="lede">
+        The quarter of team-seasons that took the most threes relative to their peers averaged +0.024 points per shot above the league. The
+        quarter that took the fewest averaged −0.018. This is a relationship, not proof of cause, since teams with good shooters both take
+        and make more threes. But it is the pattern every front office was looking at.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Team-seasons: 3-point share vs. points per shot, both relative to that season’s league average</span><span class="card-sub">Hover a dot to see the team</span></div>
+        <div class="legend" id="l-scatter"></div>
+        <div class="chart" id="c-scatter"></div>
+        <div id="t-scatter"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 ------------------------------------------------------------------>
+  <section class="section" id="s9">
+    <div class="wrap">
+      <p class="section-num">09 · The shooters</p>
+      <h2>The volume shooter went from rare to routine: 30 players took 300+ threes in 2003-04, and 125 did in 2024-25</h2>
+      <p class="lede">
+        High-volume three-point shooting used to be a specialist’s job. In 2003-04, 30 players attempted at least 300 threes and only
+        4 attempted 500. In 2024-25, <strong>125 players</strong> reached 300 and <strong>24</strong> reached 500. The dip in 2011-12 is the
+        lockout-shortened 66-game season.
+      </p>
+      <p class="lede">
+        Stephen Curry led the league in made threes in <strong>8 of the 13 seasons</strong> from 2012-13 to 2024-25. His 2015-16 season is still
+        the record: 401 makes in this data (402 officially) on 45.4% shooting. James Harden’s 2018-19 holds the attempts record at
+        <strong>1,028</strong>.
+      </p>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Players attempting 300+ threes in a season</span><span class="card-sub">Hover for that season’s leader</span></div>
+          <div class="legend" id="l-vol"></div>
+          <div class="chart" id="c-vol"></div>
+          <div id="t-vol"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">Most made threes in a season, 2003-04 to 2024-25</span><span class="card-sub">Top 15 · hover for attempts and accuracy</span></div>
+          <div class="chart" id="c-top"></div>
+          <div id="t-top"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 ------------------------------------------------------------------>
+  <section class="section" id="s10">
+    <div class="wrap">
+      <p class="section-num">10 · Shot types</p>
+      <h2>A dunk is worth 1.81 points; a standard jump shot is worth 0.90</h2>
+      <p class="lede">
+        The NBA’s play-by-play describes how each shot was taken, using 69 descriptions that I grouped into nine families. Dunks go in
+        <strong>90.3%</strong> of the time and are worth <strong>1.81 points</strong> per attempt, twice the value of a standard jump shot
+        (0.90). Layups follow at 1.13. Pull-up and step-back jumpers (1.05 and 1.03) rate higher than ordinary jumpers because so many of them
+        are threes. Floaters (0.93) and fadeaways (0.95) rate only a little above an ordinary jumper.
+      </p>
+      <p class="lede">
+        One caution: the league added labels like “step back” and “pull-up” over time (none appear before 2007-08, and the labeling changed
+        again around 2015-16), so this section compares shot types across all seasons combined rather than tracking their trends.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Points per shot by shot type (all seasons)</span><span class="card-sub">Hover for make rate and attempts</span></div>
+        <div class="chart" id="c-action"></div>
+        <div id="t-action"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 ------------------------------------------------------------------>
+  <section class="section" id="s11">
+    <div class="wrap">
+      <p class="section-num">11 · Clutch time</p>
+      <h2>Shooting gets worse when the game is on the line</h2>
+      <p class="lede">
+        Make rates fall as games go on, from <strong>46.8%</strong> in the first quarter to 44.7% in the fourth and <strong>41.5%</strong> in
+        overtime. The final two minutes of the fourth quarter and overtime are the hardest. Teams shoot <strong>42.6%</strong> there,
+        compared with 46.2% the rest of the game, and points per shot drop from 1.027 to 0.965.
+      </p>
+      <p class="lede">
+        Part of the reason is tired legs and tighter defense. Part is the shots themselves: in the final two minutes, 36.8% of attempts are
+        threes (vs. 28.5% otherwise) as trailing teams chase points. Shots in the last three seconds of the first three quarters, not counting
+        backcourt heaves, go in just 29.7% of the time.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Field-goal percentage by game situation (all seasons)</span><span class="card-sub">Axis starts at 35% · hover for points per shot and 3-point share</span></div>
+        <div class="chart" id="c-clutch"></div>
+        <div id="t-clutch"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 ------------------------------------------------------------------>
+  <section class="section" id="s12">
+    <div class="wrap">
+      <p class="section-num">12 · Home court</p>
+      <h2>Home teams shoot better, except in the season the fans went away</h2>
+      <p class="lede">
+        In every season, home teams scored more per shot than visitors, by between <strong>0.017 and 0.031 points</strong> (0.023 on average
+        across the other 21 seasons). In 2020-21, when most arenas were empty or capped at a fraction of capacity because of COVID-19,
+        the gap fell to <strong>0.011</strong>, the smallest in the data. The home edge in make rate shrank to 0.4 percentage points that
+        season, compared with 0.6 to 1.3 points in every other season.
+      </p>
+      <p class="lede">
+        The gap returned once fans did, though it has been a bit smaller in recent seasons (0.017–0.022) than in the 2000s.
+      </p>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Home minus away points per shot, by season</span><span class="card-sub">Hover for both teams’ numbers</span></div>
+        <div class="legend" id="l-home"></div>
+        <div class="chart" id="c-home"></div>
+        <div id="t-home"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- data & methods ------------------------------------------------------------>
+<section class="methods" id="data">
+  <div class="wrap">
+    <p class="section-num">About the data</p>
+    <h2>Where the numbers come from, and how they were computed</h2>
+
+    <h3>Source</h3>
+    <p>
+      The shots come from the NBA’s official stats API (the <code>shotchartdetail</code> endpoint), as collected and published by
+      Dom Samangy in the <a href="https://github.com/DomSamangy/NBA_Shots_04_25">NBA_Shots_04_25</a> repository on GitHub: one file per
+      regular season from 2003-04 through 2024-25. The files are downloaded by <code>scripts/download_data.py</code> and kept unchanged in
+      <code>data/raw/</code>. All cleaning and calculations are in <code>scripts/process_data.py</code>. Playoff games are not included.
+      I checked league totals against published league averages and player totals against official records. Player season totals
+      match official counts to within one or two shots (for example, Curry’s 2015-16: 401 of 884 here vs. 402 of 886 officially;
+      Harden’s 2018-19: 378 of 1,028 in both).
+    </p>
+
+    <h3>What one row is</h3>
+    <p>
+      One row is <strong>one field-goal attempt</strong>: a player, his team, the game and date, the season, the quarter and clock,
+      the shot’s x/y location in feet, its distance, the NBA’s zone labels, a description of the shot (“Driving Layup Shot”), whether
+      it was a 2 or a 3, and whether it went in. The raw files hold <strong>4,450,789 rows</strong> and 24–26 columns. This is event-level
+      panel data: the time column is the season (22 periods) or game date, and the group column is the team (30 franchises) or player
+      (2,265).
+    </p>
+
+    <h3>Rows dropped and fixes made</h3>
+    <ul>
+      <li><strong>9,337 backcourt shots dropped</strong> (zone “Backcourt”). These are end-of-quarter heaves from past half court, which
+        would distort distance and efficiency. They are kept only for the player 3-point totals in section 9, so those match official counts.</li>
+      <li><strong>81 rows labeled “No Shot” dropped.</strong></li>
+      <li>That leaves <strong>4,441,371 shots</strong> for the analysis.</li>
+      <li><strong>Court coordinates for 2019-20, 2020-21 and 2021-22 rescaled.</strong> Those three files store x/y on a different scale. Using
+        x × 10 and y × 10 − 52.5 reproduces the recorded shot distance for all 594,667 of those shots, the same exact match seen in every
+        other season. Distances and zones were already correct; only the shot maps needed this.</li>
+      <li><strong>Games identified by ID + date + teams</strong>, because five 2020-21 games share the placeholder ID 22000000.</li>
+      <li><strong>Franchises use their 2024-25 names</strong> (the Seattle SuperSonics appear as the Oklahoma City Thunder, the New Jersey
+        Nets as the Brooklyn Nets, the Charlotte Bobcats as the Charlotte Hornets, and the New Orleans Hornets as the Pelicans). Tooltips show
+        the name used that season.</li>
+      <li>1,573 shots (0.04%) have a zone label that disagrees with the official 2PT/3PT flag. Points always use the official flag.</li>
+    </ul>
+
+    <h3>How every number is computed</h3>
+    <dl>
+      <dt>Field-goal % (make rate)</dt><dd>made shots ÷ attempts.</dd>
+      <dt>3-point %</dt><dd>made threes ÷ attempted threes.</dd>
+      <dt>Points per shot</dt><dd>(2 × made twos + 3 × made threes) ÷ attempts. Free throws are not in this data, so this is points from field goals only.</dd>
+      <dt>Effective FG% (eFG%)</dt><dd>(made shots + 0.5 × made threes) ÷ attempts, which equals points per shot ÷ 2.</dd>
+      <dt>3-point share</dt><dd>3-point attempts ÷ all attempts.</dd>
+      <dt>Zone share</dt><dd>attempts in a zone ÷ all attempts that season. Zones use the NBA’s labels: Restricted area (within 4 ft of the
+        rim), Paint (non-RA), Mid-range (any other 2), Corner 3 (left and right combined) and Above-the-break 3.</dd>
+      <dt>Per game</dt><dd>attempts ÷ team-games, where team-games = 2 × games in the season (each game has two teams). The dashboard uses each
+        team’s actual games played, split home/away.</dd>
+      <dt>Average distance</dt><dd>mean of the NBA’s recorded shot distance in feet, capped at 40 ft. Older seasons record most rim shots as 0 ft
+        and newer seasons spread them over 0–2 ft, which accounts for a few tenths of a foot of the increase.</dd>
+      <dt>Shot map hexagons</dt><dd>shots are grouped into hexagons 1.1 ft across (report) or 1.6 ft (dashboard) by court location. Size = that hexagon’s
+        share of the season’s shots; color = its points per shot. Hexagons with fewer than 25 shots in a season are hidden on the report map.
+        Shots more than 35 ft from the baseline are left off the maps but kept in every other number.</dd>
+      <dt>Shot types</dt><dd>the 69 NBA descriptions grouped by keyword, checked in this order: Dunk, Tip-in, Layup (incl. finger rolls), Hook,
+        Floater, Step-back jumper, Pull-up jumper, Fadeaway / turnaround, and Other jumper for the rest.</dd>
+      <dt>Relative share / value (section 8)</dt><dd>a team’s 3-point share (or points per shot) minus the average of all teams in that season.
+        The correlation is Pearson’s r across all 659 team-seasons; the slope is from a least-squares line.</dd>
+      <dt>Game situations (section 11)</dt><dd>“Final 2:00” = the 4th quarter or overtime with 2:00 or less on the period clock;
+        “2:00–5:00 left” = the same periods with 2:01–5:00 left; “Rest of game” = everything else.</dd>
+      <dt>Home / away</dt><dd>a shot is a home shot when the shooter’s team abbreviation matches the game’s home team.</dd>
+      <dt>Volume shooters (section 9)</dt><dd>players with at least 300 (or 500) 3-point attempts in a season, counting all shots including heaves.</dd>
+    </dl>
+
+    <h3>Limits</h3>
+    <p>
+      Regular season only. No free throws, so points per shot is not the same as points per possession. No score margin, shot clock or
+      defender data, so “clutch” is defined by the game clock alone. The 2011-12, 2019-20 and 2020-21 seasons were shortened (66, 64–75 and 72 games
+      per team). Shares and rates are comparable across seasons; raw totals are not.
+    </p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap">
+    <span>Deep Range · NBA shot data 2003-04 to 2024-25</span>
+    <span><a href="dashboard.html">Explore the data yourself in the dashboard →</a></span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/report.js"></script>
+</body>
+</html>
