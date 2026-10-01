@@ -453,3 +453,10 @@ table.tbl tfoot tr.league td { color: var(--text-2); font-weight: 600; }
 .film-list b { display: block; }
 .film-list small { display: block; color: var(--text-2); font-size: 13px; }
 .film-list small.film-src { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+.film-top { display: flex; align-items: center; gap: 10px; }
+.film-top .film-bars { flex: 1; }
+.film-next { padding: 5px 12px; font-size: 13px; }
+.film-list { gap: 6px; max-height: 330px; overflow-y: auto; padding-right: 2px; }
+.film-list button { padding: 7px 10px; }
+.film-list small { font-size: 12.5px; }

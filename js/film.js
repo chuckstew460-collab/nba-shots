@@ -3,10 +3,15 @@
    YouTube player streams each video and stops after ~10 seconds, then the next one
    starts. The YouTube script only loads when the reader presses play. */
 
+// one clip per player in the top-15 chart, in its order; ~8 seconds each from official uploads
 const REEL = [
-  { id: "cHy7leb1LYM", start: 3, end: 13, who: "Stephen Curry", what: "From all 402 of his record threes, 2015-16", channel: "Golden State Warriors" },
-  { id: "X9GddRiKdXg", start: 1, end: 11, who: "James Harden", what: "His signature step-back three", channel: "NBA" },
-  { id: "VoqR1_UJjbk", start: 1, end: 11, who: "Klay Thompson", what: "14 threes vs. Chicago, Oct. 29, 2018", channel: "NBA" },
+  { id: "cHy7leb1LYM", start: 3, end: 11, who: "Stephen Curry", what: "From all 402 of his record threes, 2015-16", channel: "Golden State Warriors" },
+  { id: "X9GddRiKdXg", start: 1, end: 9, who: "James Harden", what: "His signature step-back three", channel: "NBA" },
+  { id: "qgKfJ5AVMaU", start: 1, end: 9, who: "Anthony Edwards", what: "Career-high 53 points and 10 threes vs. Detroit, Jan. 4, 2025", channel: "NBA" },
+  { id: "9mey7rreVhY", start: 1, end: 9, who: "Malik Beasley", what: "Career-high 36 points and 9 threes vs. Philadelphia, Feb. 7, 2025", channel: "NBA" },
+  { id: "VoqR1_UJjbk", start: 1, end: 9, who: "Klay Thompson", what: "14 threes vs. Chicago, Oct. 29, 2018", channel: "NBA" },
+  { id: "DN2OwG5qE3c", start: 1, end: 9, who: "Paul George", what: "47 points and 8 threes vs. Portland, Feb. 11, 2019", channel: "NBA" },
+  { id: "HHpdDCbUlLY", start: 1, end: 9, who: "Buddy Hield", what: "His first months with the Pacers, 2021-22", channel: "Indiana Pacers" },
 ];
 
 (function filmRoom() {
@@ -17,12 +22,13 @@ const REEL = [
   let player = null, idx = 0, timer = 0, ytReady = null, live = false;   // live: the current clip has really started
 
   // poster: the three thumbnails side by side
-  startBtn.innerHTML = `<span class="film-thumbs">${REEL.map((c) => `<img src="https://i.ytimg.com/vi/${c.id}/hqdefault.jpg" alt="" loading="lazy">`).join("")}</span>
+  startBtn.innerHTML = `<span class="film-thumbs" style="grid-template-columns:repeat(${REEL.length},1fr)">${REEL.map((c) => `<img src="https://i.ytimg.com/vi/${c.id}/hqdefault.jpg" alt="" loading="lazy">`).join("")}</span>
     <span class="film-play"><svg width="26" height="26" viewBox="0 0 18 18" aria-hidden="true"><path d="M5 2.5l10 6.5-10 6.5z" fill="currentColor"/></svg></span>
     <span class="film-cta">Play the ${total}-second reel</span>`;
   bars.innerHTML = REEL.map((c, i) => `<div class="film-seg" style="flex:${c.end - c.start}"><i id="film-fill-${i}"></i></div>`).join("");
   list.innerHTML = REEL.map((c, i) => `<li><button type="button" data-i="${i}"><span class="film-n">${i + 1}</span><span><b>${c.who}</b><small>${c.what}</small>
-    <small class="film-src">${c.channel} on YouTube · <a href="https://www.youtube.com/watch?v=${c.id}&t=${c.start}s" target="_blank" rel="noopener">watch the full video ↗</a></small></span></button></li>`).join("");
+    <small class="film-src">${c.channel} · <a href="https://www.youtube.com/watch?v=${c.id}&t=${c.start}s" target="_blank" rel="noopener">full video ↗</a></small></span></button></li>`).join("");
+  document.getElementById("film-next").addEventListener("click", () => { if (player) { if (idx < REEL.length - 1) play(idx + 1); } else start(1); });
 
   function loadYT() {
     if (ytReady) return ytReady;
