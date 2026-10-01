@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lilita+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=202610011753">
+  <link rel="stylesheet" href="css/style.css?v=202610011826">
 </head>
 <body>
 
@@ -47,25 +47,33 @@
 <div id="loading" class="wrap loading"><div class="spinner"></div><div>Loading shot data…</div></div>
 
 <div id="app" hidden>
+  <section class="wrap presets-wrap" aria-labelledby="presets-title">
+    <div class="presets-head"><h2 id="presets-title">Quick views</h2><span class="card-sub">One click sets every filter to tell a story. Change anything afterwards.</span></div>
+    <div class="presets" id="presets"></div>
+  </section>
   <div class="minibar" id="minibar" hidden>
     <div class="wrap"><span id="mini-text"></span><button class="btn" id="mini-edit" type="button">Change filters ↑</button></div>
   </div>
   <div class="filters" role="region" aria-label="Filters">
     <div class="wrap">
       <div class="filter-row">
-        <div class="filter">
-          <span class="flabel" id="lbl-season">Seasons</span>
-          <div class="season-range" role="group" aria-labelledby="lbl-season">
-            <select class="select" id="f-from" aria-label="First season"></select>
-            <span>to</span>
-            <select class="select" id="f-to" aria-label="Last season"></select>
+        <div class="filter season-filter">
+          <span class="flabel" id="lbl-season">Seasons <b id="season-label"></b></span>
+          <div class="season-slider" role="group" aria-labelledby="lbl-season">
+            <button class="play-mini" id="season-play" type="button" aria-label="Play through the seasons one at a time">
+              <svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true"><path id="season-play-icon" d="M4 2l12 7-12 7z" fill="currentColor"/></svg>
+            </button>
+            <div class="season-range" id="season-range"></div>
           </div>
         </div>
         <div class="filter"><span class="flabel">Teams</span><div class="dd" id="f-team"></div></div>
         <div class="filter"><span class="flabel" id="lbl-zone">Court zones</span><div class="seg toggle" id="f-zone" role="group" aria-labelledby="lbl-zone"></div></div>
         <div class="filter"><span class="flabel" id="lbl-loc">Games</span><div class="seg toggle" id="f-loc" role="group" aria-labelledby="lbl-loc"></div></div>
       </div>
-      <div class="status" id="status" aria-live="polite"></div>
+      <div class="status-row">
+        <div class="status" id="status" aria-live="polite"></div>
+        <button class="btn undo" id="undo" type="button" hidden>↩ Undo last click</button>
+      </div>
     </div>
   </div>
 
@@ -77,6 +85,12 @@
       <p class="explain" id="measure-explain"></p>
       <div class="switch-group"><span class="flabel" id="lbl-by">3 · Split by</span><div class="seg" id="sw-by" role="group" aria-labelledby="lbl-by"></div></div>
       <p class="explain" id="by-explain"></p>
+    </div>
+
+    <div class="insight" id="insight" aria-live="polite">
+      <div class="insight-head"><span class="insight-icon" aria-hidden="true">★</span><h2>What this view shows</h2></div>
+      <ul id="insight-list"></ul>
+      <p class="insight-tip">Tip: click any bar, season, zone, hexagon or table row to filter to it. <b>Undo</b> walks it back.</p>
     </div>
 
     <div class="dash-grid">
@@ -138,7 +152,7 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<script src="js/common.js?v=202610011753"></script>
-<script src="js/dashboard.js?v=202610011753"></script>
+<script src="js/common.js?v=202610011826"></script>
+<script src="js/dashboard.js?v=202610011826"></script>
 </body>
 </html>
