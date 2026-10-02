@@ -642,7 +642,7 @@ table.tbl tbody tr.clicky:hover td { background: var(--surface-3); }
 
 /* team dropdown: keep the filter bar (and its open dropdown) above the tiles and charts below it,
    and show all 30 teams at once in two columns */
-.filters { position: relative; z-index: 40; }
+.filters { position: relative; z-index: 40; top: 0; }   /* top: 0 cancels the old sticky offset, which would shift the bar over the tiles */
 .dd-panel { width: min(470px, calc(100vw - 32px)); max-height: min(72vh, 560px); }
 .dd-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 4px; }
 .dd-opt { padding: 4px 8px; font-size: 13.5px; }
