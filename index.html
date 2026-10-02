@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lilita+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=202610011910">
+  <link rel="stylesheet" href="css/style.css?v=202610021426">
 </head>
 <body>
 
@@ -41,6 +41,11 @@
           <p class="sa-tag">Your turn</p>
           <div class="sa-count"><span id="sa-pts">0</span><small>points</small></div>
           <div class="sa-split" id="sa-split">0 threes · 0 twos · 0 dunks</div>
+          <div class="sa-streak" id="sa-streak">
+            <div class="lbl"><span>Streak <b id="sa-streak-n">0</b></span><span id="sa-best">Best 0</span></div>
+            <div class="sa-meter" aria-hidden="true"><i id="sa-meter"></i></div>
+          </div>
+          <div class="sr-only" id="sa-announce" aria-live="polite"></div>
         </div>
         <div class="sa-where" aria-live="polite">
           <div class="sa-dist" id="sa-dist"></div>
@@ -51,10 +56,16 @@
           <button class="btn icon" id="sa-right" type="button" aria-label="Move toward the basket">&#9654;</button>
           <button class="btn primary" id="sa-shoot" type="button">Shoot <span class="kbd">Space</span></button>
           <button class="btn" id="sa-dunk" type="button">Dunk <span class="kbd">D</span></button>
+          <button class="btn icon sound" id="sa-sound" type="button" aria-pressed="true" aria-label="Sound on (press M to mute)" title="Sound on · press M to mute">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>
+              <path class="waves" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path class="cross" d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
         </div>
       </div>
       <div class="sa-court" id="sa-court" role="button" tabindex="0" aria-label="Basketball court. Click to shoot. Arrow keys move the player, Space shoots, D dunks."></div>
-      <p class="sa-hint">Keyboard: <span class="kbd">&larr;</span> <span class="kbd">&rarr;</span> move · <span class="kbd">Space</span> or <span class="kbd">&uarr;</span> shoot · <span class="kbd">D</span> or <span class="kbd">&darr;</span> dunk · or click the court. Behind the orange line it’s a three; inside it’s a two.</p>
+      <p class="sa-hint">Keyboard: <span class="kbd">&larr;</span> <span class="kbd">&rarr;</span> move · <span class="kbd">Space</span> or <span class="kbd">&uarr;</span> shoot · <span class="kbd">D</span> or <span class="kbd">&darr;</span> dunk · <span class="kbd">M</span> sound · or click the court. Behind the orange line it’s a three; inside it’s a two.
+        <b>Score again within 4 seconds to build a streak:</b> 3 in a row heats you up, 5 sets you on fire.</p>
     </div>
 
     <p class="summary">
@@ -553,9 +564,10 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<script src="js/common.js?v=202610011910"></script>
-<script src="js/shooter.js?v=202610011910"></script>
-<script src="js/report.js?v=202610011910"></script>
-<script src="js/film.js?v=202610011910"></script>
+<script src="js/common.js?v=202610021426"></script>
+<script src="js/sound.js?v=202610021426"></script>
+<script src="js/shooter.js?v=202610021426"></script>
+<script src="js/report.js?v=202610021426"></script>
+<script src="js/film.js?v=202610021426"></script>
 </body>
 </html>

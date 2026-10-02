@@ -895,6 +895,65 @@ function shootaround(record, distCurve) {
   const tally = { three: 0, two: 0, dunk: 0, pts: 0 };
   const plural = (n, one, many) => `${fmt.int(n)} ${n === 1 ? one : many}`;
 
+  // ---- streaks: each make within WINDOW ms of the last one extends it
+  const WINDOW = 4000, BEST_KEY = "deeprange-best-streak";
+  let streak = 0, lastMake = 0, heat = 0, best = 0, meterRaf = 0;
+  try { best = +localStorage.getItem(BEST_KEY) || 0; } catch (e) { /* storage blocked */ }
+  const announce = (t) => { $("sa-announce").textContent = t; };
+  function paintStreak() {
+    $("sa-streak-n").textContent = streak;
+    $("sa-best").textContent = `Best ${best}`;
+    $("sa-streak").classList.toggle("hot", heat > 0);
+    box.classList.toggle("heat-1", heat === 1);
+    box.classList.toggle("heat-2", heat >= 2);
+  }
+  function setHeat(h) { heat = h; scene.setHeat(h); paintStreak(); }
+  function drainMeter() {
+    const left = 1 - (performance.now() - lastMake) / WINDOW;
+    $("sa-meter").style.width = `${Math.max(0, left) * 100}%`;
+    if (left > 0) { meterRaf = requestAnimationFrame(drainMeter); return; }
+    meterRaf = 0;
+    if (streak >= 3) { Sfx.cool(); announce(`Streak over at ${streak}.`); }
+    streak = 0;
+    setHeat(0);
+  }
+  function onMake(kind) {
+    const now = performance.now();
+    streak = now - lastMake <= WINDOW ? streak + 1 : 1;
+    lastMake = now;
+    if (streak > best) { best = streak; try { localStorage.setItem(BEST_KEY, best); } catch (e) { /* ignore */ } }
+    const h = streak >= 5 ? 2 : streak >= 3 ? 1 : 0;
+    if (kind === "dunk") Sfx.dunk(h); else Sfx.swish(h);
+    if (h > heat) {
+      setHeat(h);
+      scene.banner(h >= 2 ? "ON FIRE!" : "HEATING UP!", `${streak} in a row`);
+      Sfx.ignite(h);
+      announce(h >= 2 ? `On fire! ${streak} in a row.` : `Heating up! ${streak} in a row.`);
+    } else if (streak === 10 || (streak > 10 && streak % 5 === 0)) {
+      scene.banner(streak === 10 ? "UNSTOPPABLE!" : `${streak} STRAIGHT!`, "the crowd is on its feet");
+      Sfx.ignite(2); Sfx.crowd(1);
+      announce(`${streak} in a row!`);
+    } else if (h >= 1) {
+      Sfx.crowd(0.35 + 0.1 * h);
+    }
+    paintStreak();
+    if (!meterRaf) meterRaf = requestAnimationFrame(drainMeter);
+  }
+
+  // ---- sound toggle (M key or the speaker button); audio starts on the first interaction
+  const soundBtn = $("sa-sound");
+  function paintSound() {
+    const on = !Sfx.muted;
+    soundBtn.setAttribute("aria-pressed", on);
+    soundBtn.setAttribute("aria-label", on ? "Sound on (press M to mute)" : "Sound off (press M to unmute)");
+    soundBtn.title = on ? "Sound on · press M to mute" : "Sound off · press M to unmute";
+  }
+  const toggleSound = () => { Sfx.setMuted(!Sfx.muted); if (!Sfx.muted) { Sfx.unlock(); Sfx.bounce(0.6); } paintSound(); };
+  soundBtn.addEventListener("click", toggleSound);
+  box.addEventListener("pointerdown", () => Sfx.unlock(), { capture: true });
+  paintSound();
+  paintStreak();
+
   function where(ft) {
     const three = ft >= 23.75, f = Math.min(35, Math.floor(ft)), r = byFt.get(f);
     $("sa-dist").innerHTML = `${ft.toFixed(1)} ft from the rim · <em>${three ? "3-pointer" : "2-pointer"}</em>`;
@@ -905,7 +964,10 @@ function shootaround(record, distCurve) {
     distFt: 25, kMax: 21,
     player: { heightIn: 76, build: 1, jersey: ACCENT, trim: "#1a0d02", numColor: "#1a0d02", number: "3" },
     onMove: where,
+    onRelease() { Sfx.release(); },
+    onBounce(strength) { Sfx.bounce(strength); },
     onScore(points, kind) {
+      onMake(kind);
       tally[kind]++; tally.pts += points;
       const el = $("sa-pts");
       el.textContent = fmt.int(tally.pts);
@@ -941,7 +1003,9 @@ function shootaround(record, distCurve) {
   const typing = (t) => t && (t.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName));
   document.addEventListener("keydown", (e) => {
     if (!visible || e.altKey || e.ctrlKey || e.metaKey || typing(e.target)) return;
+    Sfx.unlock();
     const onButton = e.target && /^(BUTTON|A|SUMMARY)$/.test(e.target.tagName);
+    if ((e.key === "m" || e.key === "M") && !e.repeat) { e.preventDefault(); toggleSound(); return; }
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault(); heldKey = e.key; scene.move(e.key === "ArrowRight" ? 1 : -1);
     } else if (e.key === " " || e.key === "ArrowUp") {

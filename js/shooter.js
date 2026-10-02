@@ -4,8 +4,11 @@
    pixels with k (px per ft): the rim is 10 ft high, the 3-point line 23 ft 9 in out.
 
    Hoops.scene(host, options) -> {
-     layout(width), shoot(style), dunk(), move(dir), setPlayer(opts), distance
+     layout(width), shoot(style), dunk(), move(dir), setPlayer(opts), distance,
+     setHeat(0|1|2), banner(text)
    }
+   options also take callbacks: onShot(type), onRelease(kind), onScore(points, kind),
+   onBounce(strength 0-1, "dribble" | "loose"), onMove(feet)
    styles: "standard" (rise-and-shoot), "pullup" (dribble, then rise),
            "stepback" (drive, step back, fade)
 
@@ -105,7 +108,9 @@ const Hoops = (() => {
 
   // ---------------------------------------------------------------- scene
   function scene(host, opts = {}) {
-    const o = { distFt: 25, kMax: 20, spanFt: 39, label: "", onScore: null, onShot: null, onMove: null, ...opts };
+    const o = { distFt: 25, kMax: 20, spanFt: 39, label: "", onScore: null, onShot: null, onMove: null, onRelease: null, onBounce: null, ...opts };
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let heat = 0, trailClock = 0, shotBounceK = 0, runBounceK = 0;
     let P = profile(opts.player);
     const svg = document.createElementNS(NS, "svg");
     svg.setAttribute("class", "hoops-svg");
@@ -192,6 +197,7 @@ const Hoops = (() => {
       el("line", { x1: xbb - 0.05 * k, x2: rimX + RIM_R * k, y1: yOf(RIM_H) + 1, y2: yOf(RIM_H) + 1, stroke: "#6b7280", "stroke-width": 0.18 * k });
 
       layer.fig = el("g");
+      layer.trail = el("g");
       layer.balls = el("g");
       layer.fx = el("g");
       // rim + net on top so the ball passes "through" them
@@ -232,6 +238,12 @@ const Hoops = (() => {
       fig.beard = P.beard ? el("path", { fill: HAIR }, g) : null;
       fig.armNear = el("polyline", st(0.28 * k * s * b, SKIN), g);
       if (o.label) fig.label = el("text", { "text-anchor": "end", fill: "#c3c8d4", "font-size": Math.max(10, 0.6 * k), "font-family": "Inter, sans-serif" }, layer.fig);
+      applyGlow();
+    }
+    function applyGlow() {
+      if (!fig.g) return;
+      fig.g.style.filter = heat >= 2 ? "drop-shadow(0 0 4px #ffd23f) drop-shadow(0 0 10px #ff7a1a) drop-shadow(0 0 18px #ff4fa3)"
+        : heat === 1 ? "drop-shadow(0 0 4px #ffb35c) drop-shadow(0 0 10px #ff7a1a)" : "";
     }
 
     // forward kinematics: pose -> joint positions in px
@@ -308,12 +320,17 @@ const Hoops = (() => {
           if (t >= d0 && t <= d1) {
             const down = Math.sin(Math.PI * (((t - d0) % per) / per));
             b = [J.hS[0] + 0.35 * k, J.hS[1] + (floorY - BALL_R * k - J.hS[1]) * down];
+            const kk = Math.floor((t - d0) / per + 0.5);          // ticks over when the ball reaches the floor
+            if (kk > shotBounceK) { shotBounceK = kk; if (o.onBounce) o.onBounce(0.9, "dribble"); }
           }
         }
-        if (pose.stride > 0.3 && (!shot || shot.kind === "dunk")) {   // dribble while running
-          const down = Math.abs(Math.sin(runPhase));
+        const rk = Math.floor(runPhase / (2 * Math.PI) + 0.5);
+        if (pose.stride > 0.3 && (!shot || shot.kind === "dunk")) {   // dribble while running (one bounce per stride)
+          const down = Math.abs(Math.sin(runPhase / 2));
           b = [J.hS[0] + 0.45 * k, J.hS[1] + (floorY - BALL_R * k - J.hS[1]) * down];
+          if (rk !== runBounceK && o.onBounce) o.onBounce(0.75, "dribble");
         }
+        runBounceK = rk;
         placeBall(held, flipX(J, b[0]), b[1], held.rot);
       }
     }
@@ -349,6 +366,7 @@ const Hoops = (() => {
       if (B.t <= B.T) {
         if (B.dunk) { const u = B.t / B.T; X = B.X0 * (1 - u); Y = B.Y0 + (RIM_H - B.Y0) * u; }
         else { X = B.X0 + B.vx * B.t; Y = B.Y0 + B.vy * B.t - 0.5 * G * B.t * B.t; B.b.rot -= 540 * dt; }
+        if (heat && !reduceMotion) { trailClock += dt; if (trailClock > 0.012) { trailClock = 0; ember(rimX + X * k, floorY - Y * k); } }
       } else {
         if (B.phase === 0) { B.phase = 1; swish(B); }
         const tn = B.t - B.T, NET = B.dunk ? 0.12 : 0.2;
@@ -357,7 +375,10 @@ const Hoops = (() => {
           if (!B.fall) B.fall = { x: B.vx * 0.12 * NET, y: RIM_H - 1.7, vx: -0.6 - Math.random() * 1.2, vy: B.dunk ? -14 : -7, t: 0, bounces: 0 };
           const f = B.fall;
           f.t += dt; f.vy -= G * dt; f.x += f.vx * dt; f.y += f.vy * dt;
-          if (f.y <= BALL_R) { f.y = BALL_R; f.vy = -f.vy * 0.55; f.vx *= 0.8; f.bounces++; }
+          if (f.y <= BALL_R) {
+            if (o.onBounce && f.vy < -2) o.onBounce(Math.min(1, -f.vy / 16), "loose");
+            f.y = BALL_R; f.vy = -f.vy * 0.55; f.vx *= 0.8; f.bounces++;
+          }
           X = f.x; Y = f.y;
           B.b.rot += f.vx * 60 * dt;
           if (f.bounces >= 2) B.b.g.style.opacity = Math.max(0, 1 - (f.t - 0.9) / 0.5);
@@ -366,6 +387,50 @@ const Hoops = (() => {
       }
       placeBall(B.b, rimX + X * k, floorY - Y * k, B.b.rot);
       return true;
+    }
+
+    // ---- heat effects (the streak "on fire" look)
+    const FLAME = ["#fff3b0", "#ffd23f", "#ff9a2e", "#ff7a1a", "#ff4fa3"];
+    function ember(x, y) {
+      const r = BALL_R * k * (heat >= 2 ? 0.9 + Math.random() * 0.5 : 0.6 + Math.random() * 0.35);
+      const c = el("circle", { cx: x + (Math.random() - 0.5) * 0.3 * k, cy: y + (Math.random() - 0.5) * 0.3 * k, r,
+        fill: FLAME[Math.floor(Math.random() * (heat >= 2 ? 5 : 4))], opacity: 0.85 }, layer.trail);
+      c.animate([{ transform: "translate(0,0) scale(1)", opacity: 0.85 }, { transform: `translate(${(Math.random() - 0.5) * 0.4 * k}px,${-0.6 * k}px) scale(0.15)`, opacity: 0 }],
+        { duration: heat >= 2 ? 620 : 420, easing: "ease-out" }).onfinish = () => c.remove();
+      c.style.transformBox = "fill-box"; c.style.transformOrigin = "center";
+    }
+    function flameBurst(n) {
+      if (reduceMotion) return;
+      const x0 = rimX, y0 = yOf(RIM_H);
+      for (let i = 0; i < n; i++) {
+        const c = el("path", { d: `M0,${-0.9 * k} Q${0.35 * k},0 0,${0.35 * k} Q${-0.35 * k},0 0,${-0.9 * k}Z`, fill: FLAME[i % 5], opacity: 0.95,
+          transform: `translate(${x0 + (Math.random() - 0.5) * 1.6 * k},${y0})` }, layer.fx);
+        const dx = (Math.random() - 0.5) * 1.2 * k, dy = -(1.2 + Math.random() * 2.2) * k;
+        c.animate([{ transform: "translate(0,0) scale(0.4)", opacity: 0.95 }, { transform: `translate(${dx}px,${dy}px) scale(1.1)`, opacity: 0.9, offset: 0.4 },
+          { transform: `translate(${dx * 1.4}px,${dy * 1.5}px) scale(0.2)`, opacity: 0 }], { duration: 650 + Math.random() * 350, easing: "ease-out", composite: "add" }).onfinish = () => c.remove();
+      }
+    }
+    function banner(text, sub) {
+      const g = el("g", { transform: `translate(${W * 0.47},${floorY * 0.42})` }, layer.fx);
+      const t = el("text", { "text-anchor": "middle", "font-family": "Bungee, 'Lilita One', sans-serif", "font-size": Math.max(22, 2.3 * k), fill: "#ffd23f",
+        stroke: "#2a0f4d", "stroke-width": Math.max(4, 0.32 * k), "paint-order": "stroke", "letter-spacing": "1" }, g);
+      t.textContent = text;
+      if (sub) {
+        const s2 = el("text", { y: Math.max(20, 1.5 * k), "text-anchor": "middle", "font-family": "'Lilita One', sans-serif", "font-size": Math.max(13, 0.95 * k),
+          fill: "#fff", stroke: "#2a0f4d", "stroke-width": 4, "paint-order": "stroke" }, g);
+        s2.textContent = sub;
+      }
+      g.style.transformBox = "fill-box";
+      const kf = reduceMotion
+        ? [{ opacity: 0 }, { opacity: 1, offset: 0.15 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }]
+        : [{ opacity: 0, transform: `translate(${W * 0.47}px,${floorY * 0.42}px) scale(0.3) rotate(-8deg)` },
+           { opacity: 1, transform: `translate(${W * 0.47}px,${floorY * 0.42}px) scale(1.15) rotate(3deg)`, offset: 0.18 },
+           { opacity: 1, transform: `translate(${W * 0.47}px,${floorY * 0.42}px) scale(1) rotate(-2deg)`, offset: 0.3 },
+           { opacity: 1, transform: `translate(${W * 0.47}px,${floorY * 0.42 - 0.4 * k}px) scale(1) rotate(-2deg)`, offset: 0.85 },
+           { opacity: 0, transform: `translate(${W * 0.47}px,${floorY * 0.42 - 1.2 * k}px) scale(1.05) rotate(-2deg)` }];
+      g.removeAttribute("transform");
+      g.style.transform = `translate(${W * 0.47}px,${floorY * 0.42}px)`;
+      g.animate(kf, { duration: 1700, easing: "ease-out" }).onfinish = () => g.remove();
     }
 
     function swish(B) {
@@ -377,6 +442,7 @@ const Hoops = (() => {
         { transform: "translateY(-2px) rotate(-2deg)", offset: 0.5 }, { transform: "translateY(0) rotate(0deg)" }], { duration: 700, easing: "ease-out" });
       const t = el("text", { x: rimX, y: yOf(RIM_H) - 0.6 * k, "text-anchor": "middle", fill: "#ffb067", "font-size": Math.max(14, 1.1 * k), "font-weight": 700, "font-family": "'Lilita One', sans-serif" }, layer.fx);
       t.textContent = B.dunk ? "SLAM! +2" : `+${B.points}`;
+      if (heat) { t.setAttribute("fill", "#ffd23f"); flameBurst(heat >= 2 ? 14 : 6); }
       t.animate([{ transform: "translateY(0)", opacity: 1 }, { transform: `translateY(${-1.8 * k}px)`, opacity: 0 }], { duration: 900, easing: "ease-out" }).onfinish = () => t.remove();
       if (o.onScore) o.onScore(B.points, B.dunk ? "dunk" : B.points === 3 ? "three" : "two");
     }
@@ -389,6 +455,7 @@ const Hoops = (() => {
       shot = { ...clip, frames: [[0, { ...pose }], ...clip.frames.map(([t, p]) => [t + blend, p])], release: clip.release + blend,
         end: clip.end + blend, dribble: clip.dribble && [clip.dribble[0] + blend, clip.dribble[1] + blend, clip.dribble[2]], t: 0, released: false, type };
       lastX = pose.x;
+      shotBounceK = 0;
       if (!held) newHeldBall(true);
       if (o.onShot) o.onShot(type);
       kick();
@@ -404,6 +471,7 @@ const Hoops = (() => {
         lastX = pose.x;
         if (!shot.released && shot.t >= shot.release) {
           shot.released = true;
+          if (o.onRelease) o.onRelease(shot.kind);
           const J = joints(pose), b = held;
           held = null;
           if (b) {
@@ -455,6 +523,8 @@ const Hoops = (() => {
         queue = []; shot = null; moveDir = 0; pose = { ...READY };
         if (W) layout(W);
       },
+      setHeat(level) { heat = level; applyGlow(); },
+      banner(text, sub) { if (W) banner(text, sub); },
       get distance() { return posFt; },
       get busy() { return !!shot; },
     };
